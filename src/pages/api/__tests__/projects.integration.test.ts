@@ -4,8 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { APIContext } from "astro";
 import { GET, POST, PUT, DELETE } from "../projects";
 
-import type { AstroCookies } from 'astro';
-import type { RewritePayload } from 'astro/dist/core/rewrite';
+import type { AstroCookies } from "astro";
+import type { RewritePayload } from "astro/dist/core/rewrite";
 
 function createTestContext(options: {
   method: string;
@@ -25,11 +25,13 @@ function createTestContext(options: {
       ...(body ? { body: JSON.stringify(body) } : {}),
     }),
     locals: {
-      supabase: supabase ?? {
-        auth: {
-          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        },
-      } as unknown as SupabaseClient,
+      supabase:
+        supabase ??
+        ({
+          auth: {
+            getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+          },
+        } as unknown as SupabaseClient),
       ...(user ? { user } : {}),
     },
     site: {
@@ -61,7 +63,7 @@ function createTestContext(options: {
   };
 }
 
-type TestContext = {
+interface TestContext {
   request: Request;
   locals: {
     supabase: SupabaseClient;
@@ -93,7 +95,7 @@ type TestContext = {
   callAction: (action: string, payload: unknown) => Promise<Response>;
   getStaticID: () => string | undefined;
   getStaticPathID: () => string | undefined;
-};
+}
 
 describe("POST /projects Integration Tests", () => {
   let supabase: SupabaseClient;
