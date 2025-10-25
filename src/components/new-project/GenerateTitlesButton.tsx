@@ -6,12 +6,14 @@ interface GenerateTitlesButtonProps {
   disabled: boolean;
   charCount: number;
   isLoading?: boolean;
+  onSubmit: () => Promise<void>;
 }
 
 export const GenerateTitlesButton = ({ 
   disabled, 
   charCount,
-  isLoading = false 
+  isLoading = false,
+  onSubmit
 }: GenerateTitlesButtonProps) => {
   const getButtonText = () => {
     if (isLoading) return 'Generating Titles...';
@@ -21,12 +23,24 @@ export const GenerateTitlesButton = ({
     return 'Generate Test Case Titles';
   };
 
-  const handleClick = () => {
-    newProjectLogger.formInteraction('generate-button-click', {
-      charCount,
-      isDisabled: disabled,
-      buttonText: getButtonText()
-    });
+  const handleClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      newProjectLogger.formInteraction('generate-button-click', {
+        charCount,
+        isDisabled: disabled,
+        buttonText: getButtonText()
+      });
+      
+      if (!disabled && !isLoading) {
+        await onSubmit();
+      }
+    } catch (error) {
+      newProjectLogger.componentLifecycle('error', { 
+        error,
+        action: 'generate-button-error'
+      });
+    }
   };
 
   return (
@@ -34,7 +48,7 @@ export const GenerateTitlesButton = ({
       type="submit"
       disabled={disabled || isLoading}
       className="gap-2"
-      onClick={handleClick}
+      onClick={(e) => handleClick(e)}
     >
       {isLoading ? (
         <Loader2 className="h-4 w-4 animate-spin" />

@@ -10,6 +10,8 @@ import node from "@astrojs/node";
 export default defineConfig({
   output: "server",
   integrations: [react(), sitemap()],
+  // Enable view transitions for smooth page navigation
+  transitions: true,
   server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
@@ -18,6 +20,11 @@ export default defineConfig({
         '@': '/src'
       }
     }
+  },
+  // Server-side environment variables configuration
+  server: {
+    port: 3000,
+    host: true
   },
   adapter: node({
     mode: "standalone",

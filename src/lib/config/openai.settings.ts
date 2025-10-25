@@ -11,7 +11,7 @@ export const OPENAI_SETTINGS = {
    * Default model to use for generating test case titles
    * Options: 'gpt-4-turbo-preview' | 'gpt-4' | 'gpt-3.5-turbo' | 'gpt-3.5-turbo-16k'
    */
-  model: 'gpt-4o-mini',
+  model: 'gpt-4-turbo-preview',
 
   /**
    * Maximum number of tokens to generate
@@ -24,10 +24,13 @@ export const OPENAI_SETTINGS = {
    * Temperature controls randomness in the output
    * Range: 0-1
    * - 0: focused and deterministic
-   * - 0.7: balanced creativity (recommended)
+   * - 0.7: balanced creativity
    * - 1: maximum creativity
+   * 
+   * Using a lower temperature (0.3) for more consistent structured output
+   * while maintaining some creativity for test case generation
    */
-  temperature: 0.7,
+  temperature: 0.3,
 } as const;
 
 // Type definitions for the settings
@@ -41,7 +44,6 @@ export const isValidModel = (model: string): model is OpenAIModel => {
     'gpt-4',
     'gpt-3.5-turbo',
     'gpt-3.5-turbo-16k',
-    'gpt-4o-mini'
 
   ].includes(model);
 };

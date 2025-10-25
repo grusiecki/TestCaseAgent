@@ -47,12 +47,34 @@ export const formatErrorResponse = (error: Error): Response => {
     );
   }
 
+  // Handle OpenAI API errors
+  if (error.name === 'OpenAIError' || error.message.includes('OpenAI')) {
+    return new Response(
+      JSON.stringify({
+        error: 'OpenAIError',
+        message: error.message,
+        details: {
+          cause: error.cause,
+          stack: error.stack
+        }
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+
   // Default error response for unhandled errors
   console.error('Unhandled error:', error);
   return new Response(
     JSON.stringify({
       error: 'InternalServerError',
-      message: 'An unexpected error occurred'
+      message: error.message || 'An unexpected error occurred',
+      details: {
+        name: error.name,
+        stack: error.stack
+      }
     }),
     {
       status: 500,

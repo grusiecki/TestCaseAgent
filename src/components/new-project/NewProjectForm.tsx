@@ -85,9 +85,10 @@ export const NewProjectForm = ({
         
         <CardFooter className="flex justify-end">
           <GenerateTitlesButton 
-            disabled={!isValid} 
+            disabled={!isValid}
             charCount={charCount}
             isLoading={isLoading}
+            onSubmit={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
           />
         </CardFooter>
       </Card>

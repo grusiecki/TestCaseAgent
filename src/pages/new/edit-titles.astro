@@ -1,0 +1,11 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { EditTitlesView } from '@/components/new-project/EditTitlesView';
+
+// Disable static generation for this page as it requires client-side data
+export const prerender = false;
+---
+
+<Layout title="Edit Test Case Titles">
+  <EditTitlesView client:load />
+</Layout>

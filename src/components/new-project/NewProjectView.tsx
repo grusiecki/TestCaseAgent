@@ -5,6 +5,7 @@ import { LoadingIndicator } from '@/components/new-project/LoadingIndicator';
 import { ErrorMessage } from '@/components/new-project/ErrorMessage';
 import { AIService } from '@/lib/services/ai.service';
 import { newProjectLogger } from '@/lib/logging/new-project.logger';
+import { useNavigate } from '@/lib/hooks/useNavigate';
 
 interface NewProjectViewModel {
   documentation: string;
@@ -22,6 +23,7 @@ const initialState: NewProjectViewModel = {
 };
 
 export const NewProjectView = () => {
+  const navigate = useNavigate();
   const [state, setState] = useState<NewProjectViewModel>(initialState);
   const [mounted, setMounted] = useState(false);
 
@@ -88,13 +90,13 @@ export const NewProjectView = () => {
         ...(data.projectName ? { name: data.projectName } : {})
       });
 
-      const destination = `/new?${searchParams.toString()}`;
+      const destination = `/new/edit-titles?${searchParams.toString()}`;
       newProjectLogger.navigationEvent(destination, {
         titlesCount: result.titles.length,
         hasProjectName: !!data.projectName
       });
       
-      window.location.href = destination;
+      navigate(destination);
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
