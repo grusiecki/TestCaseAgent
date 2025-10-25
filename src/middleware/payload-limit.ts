@@ -3,7 +3,7 @@ import { APIError } from "../lib/errors/api-errors";
 
 const MAX_PAYLOAD_SIZE = 100 * 1024; // 100KB limit
 
-export const checkPayloadSize = async (context: APIContext) => {
+export const checkPayloadSize = async (context: APIContext, next: () => Promise<Response>) => {
   const { request } = context;
   
   // Get content length from headers
@@ -33,4 +33,6 @@ export const checkPayloadSize = async (context: APIContext) => {
       body: body
     });
   }
+
+  return next();
 };

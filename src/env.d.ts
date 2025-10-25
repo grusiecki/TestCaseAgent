@@ -15,7 +15,10 @@ interface ImportMetaEnv {
   readonly SUPABASE_URL: string;
   readonly SUPABASE_KEY: string;
   readonly OPENROUTER_API_KEY: string;
-  // more env variables...
+  readonly OPENAI_API_KEY: string;
+  readonly OPENAI_MODEL?: string;
+  readonly OPENAI_MAX_TOKENS?: string;
+  readonly OPENAI_TEMPERATURE?: string;
 }
 
 interface ImportMeta {

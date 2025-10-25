@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { DashboardView } from '../components/dashboard/DashboardView';
+import TempLoginForm from '../components/auth/TempLoginForm';
+import { supabase } from '../db/supabase.client';
+
+// Check authentication
+const { data: { session }, error } = await supabase.auth.getSession();
+const isAuthenticated = !!session;
+---
+
+<Layout title="Dashboard - Test Case Manager">
+  <main>
+    {isAuthenticated ? (
+      <div class="container mx-auto px-4 py-8">
+        <DashboardView client:load />
+      </div>
+    ) : (
+      <TempLoginForm client:load />
+    )}
+  </main>
+</Layout>

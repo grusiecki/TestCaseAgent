@@ -1,8 +1,11 @@
-import { defineMiddleware } from 'astro:middleware';
+import { sequence } from 'astro:middleware';
+import { authMiddleware } from './auth';
+import { rateLimitMiddleware } from './rate-limit';
+import { payloadLimitMiddleware } from './payload-limit';
 
-import { supabaseClient } from '../db/supabase.client';
-
-export const onRequest = defineMiddleware((context, next) => {
-  context.locals.supabase = supabaseClient;
-  return next();
-});
+// Sequence of middleware to be executed in order
+export const onRequest = sequence(
+  payloadLimitMiddleware,  // First check payload size
+  rateLimitMiddleware,     // Then check rate limits
+  authMiddleware,          // Finally check authentication
+);

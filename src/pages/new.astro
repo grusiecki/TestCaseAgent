@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { NewProjectView } from '../components/new-project/NewProjectView';
+
+export const prerender = false;
+---
+
+<Layout title="New Project">
+  <div data-page="new-project">
+    <NewProjectView client:only="react" />
+  </div>
+</Layout>

@@ -90,9 +90,9 @@ Business Impact:
 	•	Time Savings: 50-70% redukcja czasu vs manual process
 	•	Time to First Export: Median < 1h od rejestracji → cel: < 30min
 8. Workflow Techniczny (LLM Integration)
-  1. User input → Openrouter.ai API (titles generation)
+  1. User input → OpenAi API (titles generation)
   2. JSON Schema validation → fallback prompt if invalid
-  3. Titles → Openrouter.ai API per TC (details generation)  
+  3. Titles → OpenAI API per TC (details generation)  
   4. localStorage autosave → Supabase final save
   5. CSV generation → TestRail format → browser download
   Error Handling: Retry (max 3x) → Timeout (2min) → Fallback prompt → User notification → Cache preservation

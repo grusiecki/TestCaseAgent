@@ -1,21 +1,77 @@
-import type { APIContext } from 'astro';
-import { AuthenticationError } from '../lib/errors/api-errors';
+import { defineMiddleware } from 'astro:middleware';
+import { supabase } from '../db/supabase.client';
 
-export const requireAuth = async (context: APIContext) => {
-  const { locals } = context;
-  const { supabase } = locals;
+// List of public routes that don't require authentication
+const publicRoutes = ['/', '/temp-login'];
 
-  const { data: { session }, error } = await supabase.auth.getSession();
+// List of public API routes
+const publicApiRoutes = [
+  '/api/auth/temp-login',
+  '/api/auth/login',
+  '/api/auth/check-session'
+];
 
-  if (error) {
-    throw new AuthenticationError('Failed to verify authentication status');
+// Helper function to check if a route is public
+const isPublicRoute = (pathname: string) => {
+  // Check API routes
+  if (pathname.startsWith('/api/')) {
+    return publicApiRoutes.includes(pathname);
   }
-
-  if (!session) {
-    throw new AuthenticationError('Authentication required');
-  }
-
-  // Add user info to context for downstream use
-  locals.user = session.user;
-  locals.session = session;
+  return publicRoutes.includes(pathname);
 };
+
+// Unified middleware for both API and page routes
+export const authMiddleware = defineMiddleware(async (context, next) => {
+  try {
+    const url = new URL(context.request.url);
+    
+    // Skip auth check for public routes
+    if (isPublicRoute(url.pathname)) {
+      return await next();
+    }
+
+    // Get session from Supabase
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    // If there's an error or no session
+    if (error || !session) {
+      // For API routes, return 401
+      if (url.pathname.startsWith('/api/')) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { 
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      // For page routes, redirect to home
+      return context.redirect('/');
+    }
+
+    // Add user info to locals for use in components/handlers
+    Object.assign(context.locals, {
+      session,
+      user: session.user,
+      supabase
+    });
+
+    // Continue to next middleware/handler
+    return await next();
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    
+    // For API routes, return 500
+    if (context.url.pathname.startsWith('/api/')) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication error' }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    // For page routes, redirect to home
+    return context.redirect('/');
+  }
+});

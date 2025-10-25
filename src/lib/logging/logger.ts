@@ -2,7 +2,7 @@ import type { APIContext } from 'astro';
 
 export interface LogEntry {
   timestamp: string;
-  level: 'info' | 'warn' | 'error';
+  level: 'debug' | 'info' | 'warn' | 'error';
   event: string;
   data?: Record<string, unknown>;
   userId?: string;
@@ -32,21 +32,41 @@ class Logger {
     console.log(entry);
   }
 
-  error(event: string, error: Error, data?: Record<string, unknown>) {
+  error(event: string, error: Error | Record<string, unknown>, data?: Record<string, unknown>) {
     const entry = this.formatLogEntry({
       timestamp: new Date().toISOString(),
       level: 'error',
       event,
       data: {
         ...data,
-        error: {
+        error: error instanceof Error ? {
           name: error.name,
           message: error.message,
           stack: error.stack
-        }
+        } : error
       }
     });
     console.error(entry);
+  }
+
+  warn(event: string, data?: Record<string, unknown>) {
+    const entry = this.formatLogEntry({
+      timestamp: new Date().toISOString(),
+      level: 'warn',
+      event,
+      data
+    });
+    console.warn(entry);
+  }
+
+  debug(event: string, data?: Record<string, unknown>) {
+    const entry = this.formatLogEntry({
+      timestamp: new Date().toISOString(),
+      level: 'debug',
+      event,
+      data
+    });
+    console.debug(entry);
   }
 
   async logRequest(context: APIContext, handler: () => Promise<Response>): Promise<Response> {

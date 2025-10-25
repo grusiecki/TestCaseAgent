@@ -1,8 +1,19 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
+import Layout from '../layouts/Layout.astro';
+import { TempLoginForm } from '../components/auth/TempLoginForm';
+import { supabase } from '../db/supabase.client';
+
+// Check if user is already logged in
+const { data: { session } } = await supabase.auth.getSession();
+
+// If logged in, redirect to dashboard
+if (session) {
+  return Astro.redirect('/dashboard');
+}
 ---
 
-<Layout>
-  <Welcome />
+<Layout title="Login">
+  <main class="min-h-screen flex items-center justify-center">
+    <TempLoginForm client:load />
+  </main>
 </Layout>

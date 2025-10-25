@@ -16,7 +16,7 @@ const defaultConfig: RateLimitConfig = {
 };
 
 export const rateLimit = (config: RateLimitConfig = defaultConfig) => {
-  return async (context: APIContext) => {
+  return async (context: APIContext, next: () => Promise<Response>) => {
     const { request } = context;
     
     // Get user IP or session ID for rate limiting key
@@ -46,11 +46,22 @@ export const rateLimit = (config: RateLimitConfig = defaultConfig) => {
       });
     }
 
-    // Add rate limit headers
-    context.response.headers.set('X-RateLimit-Limit', config.max.toString());
-    context.response.headers.set('X-RateLimit-Remaining', 
+    // Get the response from the next middleware/handler
+    const response = await next();
+
+    // Add rate limit headers to the response
+    const headers = new Headers(response.headers);
+    headers.set('X-RateLimit-Limit', config.max.toString());
+    headers.set('X-RateLimit-Remaining', 
       Math.max(0, config.max - record.count).toString());
-    context.response.headers.set('X-RateLimit-Reset', 
+    headers.set('X-RateLimit-Reset', 
       Math.ceil(record.resetTime / 1000).toString());
+
+    // Return new response with added headers
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
   };
 };
