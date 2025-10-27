@@ -6,15 +6,15 @@ import { logger } from '../logging/logger';
 export const openAIConfig = {
   model: (import.meta.env.OPENAI_MODEL && isValidModel(import.meta.env.OPENAI_MODEL))
     ? import.meta.env.OPENAI_MODEL
-    : OPENAI_SETTINGS.model,
+    : OPENAI_SETTINGS.titles.model,
 
   maxTokens: (import.meta.env.OPENAI_MAX_TOKENS && !isNaN(Number(import.meta.env.OPENAI_MAX_TOKENS)) && isValidMaxTokens(Number(import.meta.env.OPENAI_MAX_TOKENS)))
     ? Number(import.meta.env.OPENAI_MAX_TOKENS)
-    : OPENAI_SETTINGS.maxTokens,
+    : OPENAI_SETTINGS.titles.maxTokens,
 
   temperature: (import.meta.env.OPENAI_TEMPERATURE && !isNaN(Number(import.meta.env.OPENAI_TEMPERATURE)) && isValidTemperature(Number(import.meta.env.OPENAI_TEMPERATURE)))
     ? Number(import.meta.env.OPENAI_TEMPERATURE)
-    : OPENAI_SETTINGS.temperature,
+    : OPENAI_SETTINGS.titles.temperature,
 } as const;
 
 // Log the actual configuration being used

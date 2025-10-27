@@ -10,7 +10,23 @@ const generateTitlesSchema = z.object({
   projectName: z.string().optional()
 });
 
-const SYSTEM_PROMPT = `You are a professional QA engineer tasked with creating test case titles based on provided documentation.
+const generateDetailsSchema = z.object({
+  title: z.string()
+    .min(10, "Title must be at least 10 characters long")
+    .max(200, "Title cannot exceed 200 characters"),
+  context: z.string(),
+  projectName: z.string(),
+  documentation: z.string()
+    .min(100, "Documentation must be at least 100 characters long")
+    .max(5000, "Documentation cannot exceed 5000 characters"),
+  testCaseIndex: z.number().int().min(0),
+  totalTestCases: z.number().int().min(1),
+  allTitles: z.array(z.string())
+    .min(1, "At least one test case title is required")
+    .max(50, "Maximum 50 test case titles allowed")
+});
+
+const TITLES_SYSTEM_PROMPT = `You are a professional QA engineer tasked with creating test case titles based on provided documentation.
 Your goal is to generate clear, concise, and descriptive test case titles that cover the main functionality and edge cases.
 
 IMPORTANT: You must respond with a JSON object in the following exact format:
@@ -37,7 +53,46 @@ Example response format:
   ]
 }`;
 
-const USER_PROMPT_TEMPLATE = (documentation: string, projectName?: string) => {
+const DETAILS_SYSTEM_PROMPT = `You are a professional QA engineer tasked with creating detailed test case specifications.
+Your goal is to generate clear, structured, and comprehensive test case details that ensure thorough testing.
+
+You will be generating test cases in sequence, where each test case may depend on or relate to previous test cases.
+You must ensure that the test cases form a cohesive test suite where:
+1. Test cases build upon each other when appropriate
+2. Dependencies between test cases are clearly stated in preconditions
+3. The sequence of test execution is logical and efficient
+4. Each test case contributes to the overall testing coverage
+5. Edge cases and error scenarios are distributed appropriately across the suite
+
+IMPORTANT: You must respond with a JSON object in the following exact format:
+{
+  "preconditions": string,  // Required setup or initial conditions, including dependencies on previous test cases
+  "steps": string,         // Step-by-step test procedure
+  "expected_result": string // Expected outcome after test execution
+}
+
+Guidelines:
+- Preconditions MUST:
+  * List all required setup steps and initial conditions
+  * Reference any previous test cases that need to be executed first
+  * Specify the required state from previous test cases
+- Steps MUST:
+  * Be clear, numbered, and actionable
+  * Build upon previous test cases when relevant
+  * Avoid duplicating steps from previous test cases unless necessary
+- Expected results MUST:
+  * Be specific and verifiable
+  * Consider the cumulative state of the system
+  * Reflect dependencies on previous test cases
+
+Example response format:
+{
+  "preconditions": "1. Previous test cases #1 (Login) and #2 (Add Product) have been executed successfully\\n2. User is logged in from test case #1\\n3. Product is in cart from test case #2\\n4. System is in a stable state",
+  "steps": "1. Navigate to checkout page\\n2. Verify cart contents from test case #2\\n3. Enter shipping details\\n4. Submit order",
+  "expected_result": "1. Order is successfully created\\n2. Cart is emptied\\n3. Order appears in user's order history\\n4. System maintains state from test cases #1 and #2"
+}`;
+
+const TITLES_USER_PROMPT = (documentation: string, projectName?: string) => {
   let context = "Based on the following documentation:";
   if (projectName) {
     context += ` (Project: ${projectName})`;
@@ -54,6 +109,59 @@ Remember to return the response in the exact JSON format specified:
     "Title 2",
     ...
   ]
+}`;
+};
+
+const DETAILS_USER_PROMPT = (title: string, context: string, projectName: string, documentation: string, testCaseIndex: number, totalTestCases: number, allTitles: string[]) => {
+  // Format previous test cases (completed)
+  const previousTestCases = allTitles
+    .slice(0, testCaseIndex)
+    .map((t, i) => `#${i + 1}: ${t}`)
+    .join('\n');
+
+  // Format current test case
+  const currentTestCase = `#${testCaseIndex + 1}: ${title} (CURRENT)`;
+
+  // Format remaining test cases (upcoming)
+  const remainingTestCases = allTitles
+    .slice(testCaseIndex + 1)
+    .map((t, i) => `#${testCaseIndex + 2 + i}: ${t}`)
+    .join('\n');
+
+  return `Generate detailed test case specification for test case #${testCaseIndex + 1} of ${totalTestCases}.
+
+Project: ${projectName}
+
+Test Case Execution Sequence:
+
+Previously Completed Test Cases:
+${previousTestCases || 'No previous test cases'}
+
+Current Test Case:
+${currentTestCase}
+
+Upcoming Test Cases:
+${remainingTestCases || 'No more test cases'}
+
+Context: ${context}
+
+Project Documentation:
+${documentation}
+
+IMPORTANT INSTRUCTIONS:
+1. This test case MUST build upon the previously completed test cases when appropriate
+2. You MUST reference relevant previous test cases in preconditions
+3. You MUST consider how this test case affects upcoming test cases
+4. You MUST maintain a logical testing flow through the entire suite
+5. You MUST specify any required state from previous test cases
+6. You MUST ensure this test case prepares necessary state for upcoming test cases
+
+Generate appropriate test case details following the guidelines.
+Remember to return the response in the exact JSON format specified:
+{
+  "preconditions": "1. Previous test cases #1 and #2 completed successfully\\n2. System state from test case #2 is maintained",
+  "steps": "1. First step\\n2. Second step",
+  "expected_result": "1. First expected result\\n2. State is prepared for test case #4"
 }`;
 };
 
@@ -89,8 +197,13 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     console.log('Validating request data...');
-    const { documentation, projectName } = generateTitlesSchema.parse(body);
-    console.log('Data validated successfully');
+    // Determine request type based on body content
+    const isDetailsRequest = 'title' in body;
+    
+    const validatedData = isDetailsRequest 
+      ? generateDetailsSchema.parse(body)
+      : generateTitlesSchema.parse(body);
+    console.log('Data validated successfully', { isDetailsRequest });
 
     console.log('Initializing OpenAI...');
     const openai = new OpenAI({
@@ -101,9 +214,23 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('Creating completion...');
     const completion = await openai.chat.completions.create({
       model: openAIConfig.model,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: USER_PROMPT_TEMPLATE(documentation, projectName) }
+      messages: isDetailsRequest ? [
+        { role: "system", content: DETAILS_SYSTEM_PROMPT },
+        { role: "user", content: DETAILS_USER_PROMPT(
+          (validatedData as z.infer<typeof generateDetailsSchema>).title,
+          (validatedData as z.infer<typeof generateDetailsSchema>).context,
+          (validatedData as z.infer<typeof generateDetailsSchema>).projectName,
+          (validatedData as z.infer<typeof generateDetailsSchema>).documentation,
+          (validatedData as z.infer<typeof generateDetailsSchema>).testCaseIndex,
+          (validatedData as z.infer<typeof generateDetailsSchema>).totalTestCases,
+          (validatedData as z.infer<typeof generateDetailsSchema>).allTitles
+        ) }
+      ] : [
+        { role: "system", content: TITLES_SYSTEM_PROMPT },
+        { role: "user", content: TITLES_USER_PROMPT(
+          (validatedData as z.infer<typeof generateTitlesSchema>).documentation,
+          (validatedData as z.infer<typeof generateTitlesSchema>).projectName
+        ) }
       ],
       temperature: openAIConfig.temperature,
       max_tokens: openAIConfig.maxTokens,
@@ -147,24 +274,51 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    if (!Array.isArray(response.titles)) {
-      console.error('Invalid Response Format:', {
-        expectedFormat: '{ titles: string[] }',
-        receivedResponse: response
-      });
+    if (isDetailsRequest) {
+      // Validate details response format
+      if (!response.preconditions || !response.steps || !response.expected_result) {
+        console.error('Invalid Details Response Format:', {
+          expectedFormat: '{ preconditions: string, steps: string, expected_result: string }',
+          receivedResponse: response
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: "Invalid response format from OpenAI",
+            debug: { response }
+          }),
+          { status: 500 }
+        );
+      }
+
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid response format from OpenAI",
-          debug: { response }
+        JSON.stringify({
+          preconditions: response.preconditions,
+          steps: response.steps,
+          expected_result: response.expected_result
         }),
-        { status: 500 }
+        { status: 200 }
+      );
+    } else {
+      // Validate titles response format
+      if (!Array.isArray(response.titles)) {
+        console.error('Invalid Titles Response Format:', {
+          expectedFormat: '{ titles: string[] }',
+          receivedResponse: response
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: "Invalid response format from OpenAI",
+            debug: { response }
+          }),
+          { status: 500 }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ titles: response.titles }),
+        { status: 200 }
       );
     }
-
-    return new Response(
-      JSON.stringify({ titles: response.titles }),
-      { status: 200 }
-    );
 
   } catch (error) {
     console.error("Error generating titles:", error);

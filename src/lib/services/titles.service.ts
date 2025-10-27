@@ -1,104 +1,90 @@
-import type { TitlesDTO } from '@/types';
-import { newProjectLogger } from '@/lib/logging/new-project.logger';
+const STORAGE_KEY = 'generatedTitles';
+const PROJECT_CONTEXT_KEY = 'projectContext';
 
-/**
- * Error class for titles-related operations
- */
-class TitlesServiceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'TitlesServiceError';
-  }
+interface ProjectContext {
+  projectName: string;
+  documentation: string;
 }
 
-/**
- * Service for managing test case titles
- * Handles saving and retrieving titles from both local storage and the backend
- */
 export class TitlesService {
-  private static readonly STORAGE_KEY = 'generatedTitles';
-  private static readonly UPDATE_TITLES_ENDPOINT = '/api/projects/titles';
-
-  /**
-   * Saves titles to both localStorage and the backend
-   * @param titles Array of test case titles to save
-   * @param projectId Optional project ID to associate titles with
-   * @throws {TitlesServiceError} If saving fails
-   */
-  static async saveTitles(titles: string[], projectId?: string): Promise<void> {
+  static saveTitles(titles: string[]): void {
+    console.log('Saving titles to localStorage:', { count: titles.length, titles });
     try {
-      // Save to localStorage first for immediate feedback
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(titles));
-
-      // If we have a project ID, also save to the backend
-      if (projectId) {
-        const response = await fetch(`${this.UPDATE_TITLES_ENDPOINT}/${projectId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ titles }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new TitlesServiceError(
-            errorData.message || 'Failed to save titles to the server'
-          );
-        }
-      }
-
-      newProjectLogger.info('titles-saved', {
-        count: titles.length,
-        projectId,
-      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(titles));
+      console.log('Titles saved successfully');
     } catch (error) {
-      newProjectLogger.error('save-titles-error', { error, projectId });
-      
-      if (error instanceof TitlesServiceError) {
-        throw error;
-      }
-      
-      throw new TitlesServiceError(
-        error instanceof Error ? error.message : 'Failed to save titles'
-      );
+      console.error('Failed to save titles to localStorage:', error);
+      throw new Error('Failed to save titles');
     }
   }
 
-  /**
-   * Loads titles from localStorage
-   * @returns Array of saved titles or null if none found
-   * @throws {TitlesServiceError} If loading fails
-   */
-  static loadTitles(): string[] | null {
+  static loadTitles(): string[] {
+    console.log('Loading titles from localStorage');
     try {
-      const savedTitles = localStorage.getItem(this.STORAGE_KEY);
+      const savedTitles = localStorage.getItem(STORAGE_KEY);
       if (!savedTitles) {
-        return null;
+        console.log('No saved titles found');
+        return [];
       }
-
       const titles = JSON.parse(savedTitles);
-      if (!Array.isArray(titles)) {
-        throw new TitlesServiceError('Invalid titles format in storage');
-      }
-
+      console.log('Loaded titles:', { count: titles.length, titles });
       return titles;
     } catch (error) {
-      newProjectLogger.error('load-titles-error', { error });
-      throw new TitlesServiceError(
-        'Failed to load saved titles. Please try again.'
-      );
+      console.error('Failed to load titles from localStorage:', error);
+      return [];
     }
   }
 
-  /**
-   * Clears saved titles from localStorage
-   */
-  static clearSavedTitles(): void {
+  static clearTitles(): void {
+    console.log('Clearing titles from localStorage');
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(PROJECT_CONTEXT_KEY);
+      console.log('Titles and project context cleared successfully');
     } catch (error) {
-      newProjectLogger.error('clear-titles-error', { error });
+      console.error('Failed to clear titles from localStorage:', error);
+    }
+  }
+
+  static saveProjectContext(context: ProjectContext): void {
+    console.log('Saving project context to localStorage:', context);
+    try {
+      localStorage.setItem(PROJECT_CONTEXT_KEY, JSON.stringify(context));
+      console.log('Project context saved successfully');
+    } catch (error) {
+      console.error('Failed to save project context to localStorage:', error);
+      throw new Error('Failed to save project context');
+    }
+  }
+
+  static hasProjectContext(): boolean {
+    const savedContext = localStorage.getItem(PROJECT_CONTEXT_KEY);
+    if (!savedContext) return false;
+    try {
+      const context = JSON.parse(savedContext);
+      return !!(context.projectName && context.documentation);
+    } catch {
+      return false;
+    }
+  }
+
+  static loadProjectContext(): ProjectContext {
+    console.log('Loading project context from localStorage');
+    try {
+      const savedContext = localStorage.getItem(PROJECT_CONTEXT_KEY);
+      if (!savedContext) {
+        console.log('No saved project context found');
+        throw new Error('Project context not found. Please go back and provide project documentation.');
+      }
+      const context = JSON.parse(savedContext);
+      if (!context.projectName || !context.documentation) {
+        throw new Error('Invalid project context. Please go back and provide project documentation.');
+      }
+      console.log('Loaded project context:', context);
+      return context;
+    } catch (error) {
+      console.error('Failed to load project context from localStorage:', error);
+      throw error instanceof Error ? error : new Error('Failed to load project context');
     }
   }
 }

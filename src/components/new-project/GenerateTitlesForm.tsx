@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DocumentationTextarea } from './DocumentationTextarea';
 import { GenerateTitlesButton } from './GenerateTitlesButton';
+import { AIService } from '@/lib/services/ai.service';
 import { TitlesService } from '@/lib/services/titles.service';
 import { newProjectLogger } from '@/lib/logging/new-project.logger';
 import { ErrorMessage } from './ErrorMessage';
@@ -30,7 +31,7 @@ export const GenerateTitlesForm = ({
       setIsLoading(true);
       setError(null);
 
-      const result = await TitlesService.generateTitles({
+      const result = await AIService.generateTitles({
         documentation,
         projectName
       });
@@ -40,6 +41,8 @@ export const GenerateTitlesForm = ({
         projectName
       });
 
+      // Save titles and notify parent
+      await TitlesService.saveTitles(result.titles);
       onTitlesGenerated(result.titles);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to generate titles';

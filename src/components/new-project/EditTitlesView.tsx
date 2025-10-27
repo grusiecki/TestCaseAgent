@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TitlesList } from './TitlesList';
 import { AddTitleButton } from './AddTitleButton';
 import { TitlesValidator } from './TitlesValidator';
@@ -8,6 +8,7 @@ import { useTitlesValidation } from './hooks/useTitlesValidation';
 import { useAutosave } from './hooks/useAutosave';
 import { TitlesService } from '@/lib/services/titles.service';
 import { AIService } from '@/lib/services/ai.service';
+// Project service will be imported when needed for saving
 
 /**
  * Interface representing the view model for the EditTitlesView component.
@@ -47,8 +48,24 @@ interface EditTitlesViewModel {
  * It uses AIService for generating titles and TitlesService for persistence.
  */
 
-export const EditTitlesView = () => {
+interface EditTitlesViewProps {
+  projectId?: string;
+}
+
+export const EditTitlesView = ({ projectId }: EditTitlesViewProps) => {
+  // Debounced save of project context
+  const saveProjectContextDebounced = useCallback((documentation: string, projectName: string) => {
+    const timeoutId = setTimeout(() => {
+      TitlesService.saveProjectContext({
+        projectName: projectName || '',
+        documentation
+      });
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
   const navigate = useNavigate();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [viewModel, setViewModel] = useState<EditTitlesViewModel>({
     titles: [],
     errorMessage: null,
@@ -107,8 +124,16 @@ export const EditTitlesView = () => {
         generationStatus: 'Saving generated titles...'
       }));
 
-      // Save generated titles
+      // Save generated titles and project context
+      console.log('Saving generated titles:', result.titles);
       await TitlesService.saveTitles(result.titles);
+      await TitlesService.saveProjectContext({
+        projectName: viewModel.projectName || '',
+        documentation: viewModel.documentation
+      });
+      console.log('Titles and context saved, verifying...');
+      const savedTitles = TitlesService.loadTitles();
+      console.log('Verification result:', { savedTitles });
 
       // Add a small delay to show the success state
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -148,15 +173,22 @@ export const EditTitlesView = () => {
   };
 
   useEffect(() => {
+    console.log('EditTitlesView: Loading titles...');
+    
     // First try to get titles from URL parameters
     const params = new URLSearchParams(window.location.search);
     const titlesParam = params.get('titles');
     const projectName = params.get('name');
 
+    console.log('URL parameters:', { titlesParam, projectName });
+
     if (titlesParam) {
       try {
         const titlesFromUrl = JSON.parse(titlesParam);
+        console.log('Parsed titles from URL:', titlesFromUrl);
+        
         if (Array.isArray(titlesFromUrl) && titlesFromUrl.length > 0) {
+          console.log('Setting titles from URL');
           setViewModel(prev => ({ 
             ...prev, 
             titles: titlesFromUrl,
@@ -167,23 +199,45 @@ export const EditTitlesView = () => {
           return;
         }
       } catch (error) {
+        console.error('Failed to parse URL titles:', error);
         newProjectLogger.error('parse-url-titles-error', { error });
       }
     }
 
     // If no URL parameters, try loading from localStorage
     try {
+      console.log('Loading titles and context from localStorage...');
       const savedTitles = TitlesService.loadTitles();
+      console.log('Loaded titles:', savedTitles);
+
       if (savedTitles && savedTitles.length > 0) {
-        setViewModel(prev => ({ ...prev, titles: savedTitles }));
+        console.log('Setting titles from localStorage');
+        
+        // Load project context
+        try {
+          const { documentation, projectName: savedProjectName } = TitlesService.loadProjectContext();
+          setViewModel(prev => ({ 
+            ...prev, 
+            titles: savedTitles,
+            documentation: documentation,
+            projectName: savedProjectName
+          }));
+        } catch (error) {
+          console.error('Failed to load project context:', error);
+          // Even if context loading fails, still show titles
+          setViewModel(prev => ({ ...prev, titles: savedTitles }));
+        }
       } else {
+        console.log('No titles found, redirecting to /new');
         newProjectLogger.warn('no-titles-found', { 
           hasUrlParams: !!titlesParam,
           hasProjectName: !!projectName
         });
         navigate('/new', { replace: true }); // Use replace to prevent back navigation
       }
+      setIsInitialLoading(false);
     } catch (error) {
+      console.error('Failed to load titles:', error);
       newProjectLogger.error('edit-titles-load-error', { error });
       navigate('/new', { replace: true });
     }
@@ -239,7 +293,7 @@ export const EditTitlesView = () => {
       
       const saveTimeout = setTimeout(() => {
         try {
-          localStorage.setItem('generatedTitles', JSON.stringify(viewModel.titles));
+          TitlesService.saveTitles(viewModel.titles);
           setViewModel(prev => ({ ...prev, isAutosaving: false }));
         } catch (error) {
           newProjectLogger.error('edit-titles-autosave-error', { error });
@@ -255,6 +309,14 @@ export const EditTitlesView = () => {
     }
   }, [viewModel.titles]);
 
+  if (isInitialLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Edit Test Case Titles</h1>
@@ -264,7 +326,12 @@ export const EditTitlesView = () => {
           className="w-full p-4 border rounded-lg"
           placeholder="Enter your test case documentation here..."
           value={viewModel.documentation}
-          onChange={(e) => setViewModel(prev => ({ ...prev, documentation: e.target.value }))}
+          onChange={(e) => {
+            const newDocumentation = e.target.value;
+            setViewModel(prev => ({ ...prev, documentation: newDocumentation }));
+            // Save documentation to context with debounce
+            saveProjectContextDebounced(newDocumentation, viewModel.projectName || '');
+          }}
           rows={6}
           disabled={viewModel.isGenerating}
         />
@@ -311,6 +378,20 @@ export const EditTitlesView = () => {
           onAdd={handleAddTitle}
           disabled={viewModel.titles.length >= 20}
         />
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <button
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
+          onClick={() => {
+            // For now, just navigate to generate details view
+            // We'll implement project creation later when Supabase is ready
+            navigate('/projects/temp/generate-details');
+          }}
+          disabled={viewModel.titles.length === 0}
+        >
+          Create test case details
+        </button>
       </div>
 
       {viewModel.isAutosaving && (

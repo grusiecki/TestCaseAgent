@@ -100,6 +100,10 @@ export interface TitlesDTO {
 export interface GenerateDetailsCommand {
   title: string;
   context: string;
+  projectName: string;
+  documentation: string;
+  testCaseIndex: number;
+  totalTestCases: number;
 }
 
 // DTO for the response containing test case details.

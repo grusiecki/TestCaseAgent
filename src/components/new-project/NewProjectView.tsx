@@ -4,6 +4,7 @@ import { NewProjectForm } from '@/components/new-project/NewProjectForm';
 import { LoadingIndicator } from '@/components/new-project/LoadingIndicator';
 import { ErrorMessage } from '@/components/new-project/ErrorMessage';
 import { AIService } from '@/lib/services/ai.service';
+import { TitlesService } from '@/lib/services/titles.service';
 import { newProjectLogger } from '@/lib/logging/new-project.logger';
 import { useNavigate } from '@/lib/hooks/useNavigate';
 
@@ -84,13 +85,13 @@ export const NewProjectView = () => {
         titlesCount: result.titles.length
       });
 
-      // Navigate to the project creation page with generated titles
-      const searchParams = new URLSearchParams({
-        titles: JSON.stringify(result.titles),
-        ...(data.projectName ? { name: data.projectName } : {})
+      // Save titles and project context to localStorage
+      await TitlesService.saveTitles(result.titles);
+      await TitlesService.saveProjectContext({
+        projectName: data.projectName || '',
+        documentation: data.documentation
       });
-
-      const destination = `/new/edit-titles?${searchParams.toString()}`;
+      const destination = '/new/edit-titles';
       newProjectLogger.navigationEvent(destination, {
         titlesCount: result.titles.length,
         hasProjectName: !!data.projectName
