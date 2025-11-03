@@ -89,9 +89,9 @@ Guidelines:
 
 Example response format:
 {
-  "preconditions": " User is logged in from test case \\ Product is in cart from test case \\ System is in a stable state",
-  "steps": "Navigate to checkout page\\ Verify cart contents from test case \\ Enter shipping details\\ Submit order",
-  "expected_result": " Order is successfully created\\ Cart is emptied\\ Order appears in user's order history
+  "preconditions": " User is logged out \\ User is on the login page",
+  "steps": "Write correct user name\\ Write correct password \\ Submit login",
+  "expected_result": " User name is written\\ Password is written\\ User is logged in. Main screen is visible"
 }`;
 
 const TITLES_USER_PROMPT = (documentation: string, projectName?: string) => {
@@ -136,14 +136,6 @@ Project: ${projectName}
 
 Test Case Execution Sequence:
 
-Previously Completed Test Cases:
-${previousTestCases || 'No previous test cases'}
-
-Current Test Case:
-${currentTestCase}
-
-Upcoming Test Cases:
-${remainingTestCases || 'No more test cases'}
 
 Context: ${context}
 
@@ -151,19 +143,18 @@ Project Documentation:
 ${documentation}
 
 IMPORTANT INSTRUCTIONS:
-1. This test case MUST build upon the previously completed test cases when appropriate
-2. You MUST reference relevant previous test cases in preconditions
-3. You MUST consider how this test case affects upcoming test cases
-4. You MUST maintain a logical testing flow through the entire suite
-5. You MUST specify any required state from previous test cases
-6. You MUST ensure this test case prepares necessary state for upcoming test cases
+
+1. You MUST maintain a logical testing flow 
+2. You MUST provide logical expected result for EACH step
+
+
 
 Generate appropriate test case details following the guidelines.
 Remember to return the response in the exact JSON format specified:
 {
-  "preconditions": "1. Previous test cases #1 and #2 completed successfully\\n2. System state from test case #2 is maintained",
-  "steps": "1. First step\\n2. Second step",
-  "expected_result": "1. First expected result\\n2. State is prepared for test case #4"
+  "preconditions": "User is logged out \\ User is on the login page",
+  "steps": "First step\\ Second step",
+  "expected_result": "First expected result\\State is prepared for test case #4"
 }`;
 };
 
