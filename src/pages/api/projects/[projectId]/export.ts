@@ -70,13 +70,31 @@ function generateCSV(testCases: any[]): string {
   // CSV header row
   const headers = ['Title', 'Steps', 'Expected Result', 'Preconditions'];
 
-  // Convert test cases to CSV rows
-  const rows = testCases.map(testCase => [
-    escapeCSV(testCase.title),
-    escapeCSV(testCase.steps),
-    escapeCSV(testCase.expected_result),
-    escapeCSV(testCase.preconditions || '')
-  ]);
+  // Convert test cases to CSV rows - using multi-row format for TestRail
+  const rows: string[][] = [];
+
+  testCases.forEach(testCase => {
+    const steps = parseStepsAndResults(testCase.steps);
+    const expectedResults = parseStepsAndResults(testCase.expected_result);
+
+    // Determine the maximum number of rows needed for this test case
+    const maxRows = Math.max(steps.length, expectedResults.length, 1);
+
+    for (let i = 0; i < maxRows; i++) {
+      const isFirstRow = i === 0;
+
+      rows.push([
+        // Title only in first row
+        isFirstRow ? escapeCSV(testCase.title) : '',
+        // Steps - one per row
+        escapeCSV(steps[i] || ''),
+        // Expected Result - one per row
+        escapeCSV(expectedResults[i] || ''),
+        // Preconditions only in first row
+        isFirstRow ? escapeCSV(testCase.preconditions || '') : ''
+      ]);
+    }
+  });
 
   // Combine headers and rows
   const csvData = [headers, ...rows];
@@ -94,16 +112,52 @@ function generateCSV(testCases: any[]): string {
   return csvString;
 }
 
+// Parse steps and expected results into individual items for multi-row CSV format
+function parseStepsAndResults(field: string): string[] {
+  if (!field) return [];
+
+  // If field contains newlines, split by newlines
+  if (field.includes('\n')) {
+    return field.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  }
+
+  // Split by numbered items (1. , 2. , 3. , etc.)
+  const items = field.split(/(\d+\.\s)/).filter(item => item.trim().length > 0);
+
+  // Reconstruct items by combining numbers with their text
+  const result: string[] = [];
+  for (let i = 0; i < items.length; i += 2) {
+    const numberPart = items[i];
+    const textPart = items[i + 1];
+    if (textPart) {
+      result.push((numberPart + textPart).trim());
+    } else {
+      // If no text part, it might be just the number part
+      result.push(numberPart.trim());
+    }
+  }
+
+  return result.length > 0 ? result : [field];
+}
+
+// Format steps and expected results to ensure each step/result is on a separate line
+function formatStepsAndResults(field: string): string {
+  if (!field) return '';
+
+  // If the field already contains newlines, return as is
+  if (field.includes('\n')) {
+    return field;
+  }
+
+  // Add newlines before numbered steps/results (e.g., "1. Step one 2. Step two" -> "1. Step one\n2. Step two")
+  return field.replace(/(\d+\.\s)/g, '\n$1').trim();
+}
+
 // Escape CSV field to handle quotes and newlines
 function escapeCSV(field: string): string {
   if (!field) return '';
 
-  // Replace double quotes with double double quotes and wrap in quotes if contains comma, quote, or newline
-  const needsQuotes = field.includes(',') || field.includes('"') || field.includes('\n') || field.includes('\r');
-
-  if (needsQuotes) {
-    return field.replace(/"/g, '""');
-  }
-
-  return field;
+  // Always escape double quotes by replacing them with double double quotes
+  // This ensures proper CSV formatting for fields that will be wrapped in quotes
+  return field.replace(/"/g, '""');
 }

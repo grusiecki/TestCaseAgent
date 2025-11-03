@@ -63,6 +63,8 @@ You must ensure that the test cases form a cohesive test suite where:
 3. The sequence of test execution is logical and efficient
 4. Each test case contributes to the overall testing coverage
 5. Edge cases and error scenarios are distributed appropriately across the suite
+6. Each step have to have a corresponding expected result
+7. Do not number the steps, just describe them
 
 IMPORTANT: You must respond with a JSON object in the following exact format:
 {
@@ -77,19 +79,19 @@ Guidelines:
   * Reference any previous test cases that need to be executed first
   * Specify the required state from previous test cases
 - Steps MUST:
-  * Be clear, numbered, and actionable
-  * Build upon previous test cases when relevant
-  * Avoid duplicating steps from previous test cases unless necessary
+  * Be clear, and actionable
+  
+  
 - Expected results MUST:
   * Be specific and verifiable
   * Consider the cumulative state of the system
-  * Reflect dependencies on previous test cases
+  
 
 Example response format:
 {
-  "preconditions": "1. Previous test cases #1 (Login) and #2 (Add Product) have been executed successfully\\n2. User is logged in from test case #1\\n3. Product is in cart from test case #2\\n4. System is in a stable state",
-  "steps": "1. Navigate to checkout page\\n2. Verify cart contents from test case #2\\n3. Enter shipping details\\n4. Submit order",
-  "expected_result": "1. Order is successfully created\\n2. Cart is emptied\\n3. Order appears in user's order history\\n4. System maintains state from test cases #1 and #2"
+  "preconditions": " User is logged in from test case \\ Product is in cart from test case \\ System is in a stable state",
+  "steps": "Navigate to checkout page\\ Verify cart contents from test case \\ Enter shipping details\\ Submit order",
+  "expected_result": " Order is successfully created\\ Cart is emptied\\ Order appears in user's order history
 }`;
 
 const TITLES_USER_PROMPT = (documentation: string, projectName?: string) => {
