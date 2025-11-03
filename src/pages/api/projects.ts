@@ -60,7 +60,7 @@ export const POST: APIRoute = async (context) => {
 
           // Create project using service
           const projectService = new ProjectService(locals.supabase);
-          const project = await projectService.createProject(validatedData);
+          const project = await projectService.createProject(validatedData, locals.user.id);
 
           // Return successful response
           return new Response(JSON.stringify(project), {

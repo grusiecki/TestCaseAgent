@@ -8,7 +8,8 @@ import { useTitlesValidation } from './hooks/useTitlesValidation';
 import { useAutosave } from './hooks/useAutosave';
 import { TitlesService } from '@/lib/services/titles.service';
 import { AIService } from '@/lib/services/ai.service';
-// Project service will be imported when needed for saving
+import { ProjectService } from '@/lib/services/project.service';
+import type { CreateProjectCommand } from '@/types';
 
 /**
  * Interface representing the view model for the EditTitlesView component.
@@ -25,6 +26,8 @@ interface EditTitlesViewModel {
   isGenerating: boolean;
   /** Generation progress status message */
   generationStatus: string;
+  /** Flag indicating if project is being created */
+  isCreatingProject: boolean;
   /** Documentation text used for generating titles */
   documentation: string;
   /** Optional project name */
@@ -72,6 +75,7 @@ export const EditTitlesView = ({ projectId }: EditTitlesViewProps) => {
     isAutosaving: false,
     isGenerating: false,
     generationStatus: '',
+    isCreatingProject: false,
     documentation: '',
     projectName: undefined,
     isGenerationLocked: false
@@ -384,13 +388,12 @@ export const EditTitlesView = ({ projectId }: EditTitlesViewProps) => {
         <button
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
           onClick={() => {
-            // For now, just navigate to generate details view
-            // We'll implement project creation later when Supabase is ready
+            // Navigate to generate details - project will be created later in "Finish & Export"
             navigate('/projects/temp/generate-details');
           }}
           disabled={viewModel.titles.length === 0}
         >
-          Create test case details
+          {viewModel.isCreatingProject ? 'Creating Project...' : 'Create test case details'}
         </button>
       </div>
 

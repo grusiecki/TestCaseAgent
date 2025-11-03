@@ -31,7 +31,7 @@ describe('ProjectService', () => {
       });
 
       // Act
-      const result = await projectService.createProject(input);
+      const result = await projectService.createProject(input, 'user-123');
 
       // Assert
       expect(result).toEqual({
@@ -66,7 +66,7 @@ describe('ProjectService', () => {
       });
 
       // Act
-      const result = await projectService.createProject(input);
+      const result = await projectService.createProject(input, 'user-123');
 
       // Assert
       expect(result).toEqual({

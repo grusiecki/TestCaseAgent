@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CreateProjectInput } from '../validation/project.schema';
-import type { ProjectDTO, UpdateProjectCommand } from '../../types';
+import type { ProjectDTO, UpdateProjectCommand, TestCaseDTO } from '../../types';
 import { createProjectSchema } from '../validation/project.schema';
 
 export class ProjectService {
@@ -12,7 +12,7 @@ export class ProjectService {
     });
   }
 
-  async createProject(input: CreateProjectInput): Promise<ProjectDTO> {
+  async createProject(input: CreateProjectInput, userId: string): Promise<ProjectDTO> {
     console.log('Creating project with input:', input);
 
     // Validate input
@@ -25,6 +25,7 @@ export class ProjectService {
       .from('projects')
       .insert({
         name: validatedData.name,
+        user_id: userId,
       })
       .select('id, name, created_at, final_score')
       .single();
@@ -36,16 +37,19 @@ export class ProjectService {
 
     console.log('Project created successfully:', project);
 
-    // Create test cases if initialTitles are provided
+    // Create test cases - either from complete testCases or from initialTitles
     let testCaseCount = 0;
-    if (validatedData.initialTitles?.length) {
-      console.log('Creating test cases...');
-      const testCases = validatedData.initialTitles.map((title, index) => ({
+
+    if (validatedData.testCases?.length) {
+      // Create complete test cases with all details
+      console.log('Creating complete test cases with details...');
+      const testCases = validatedData.testCases.map((tc, index) => ({
         project_id: project.id,
-        title,
-        order_index: index,
-        steps: '',
-        expected_result: '',
+        title: tc.title,
+        preconditions: tc.preconditions,
+        steps: tc.steps,
+        expected_result: tc.expected_result,
+        order_index: tc.order_index,
       }));
 
       const { error: testCasesError } = await this.supabase
@@ -58,7 +62,30 @@ export class ProjectService {
       }
 
       testCaseCount = testCases.length;
-      console.log(`Created ${testCaseCount} test cases`);
+      console.log(`Created ${testCaseCount} complete test cases`);
+    } else if (validatedData.initialTitles?.length) {
+      // Legacy: create test cases from titles only (for backward compatibility)
+      console.log('Creating test cases from titles only...');
+      const testCases = validatedData.initialTitles.map((title, index) => ({
+        project_id: project.id,
+        title,
+        order_index: index,
+        steps: '',
+        expected_result: '',
+        preconditions: '',
+      }));
+
+      const { error: testCasesError } = await this.supabase
+        .from('test_cases')
+        .insert(testCases);
+
+      if (testCasesError) {
+        console.error('Failed to create test cases:', testCasesError);
+        throw new Error('Failed to create test cases: ' + testCasesError.message);
+      }
+
+      testCaseCount = testCases.length;
+      console.log(`Created ${testCaseCount} test cases from titles`);
     }
 
     // Return ProjectDTO
@@ -153,5 +180,58 @@ export class ProjectService {
     }
 
     console.log(`Project ${id} deleted successfully`);
+  }
+
+  async exportProject(id: string): Promise<{ project: ProjectDTO; testCases: TestCaseDTO[] }> {
+    console.log(`Exporting project ${id}...`);
+
+    // First, verify project exists and get project data
+    const { data: project, error: projectError } = await this.supabase
+      .from('projects')
+      .select('id, name, created_at, final_score')
+      .eq('id', id)
+      .single();
+
+    if (projectError) {
+      console.error('Failed to fetch project for export:', projectError);
+      throw new Error('Failed to fetch project: ' + projectError.message);
+    }
+
+    if (!project) {
+      console.error('Project not found for export:', id);
+      throw new Error('Project not found');
+    }
+
+    // Get all test cases for the project
+    const { data: testCases, error: testCasesError } = await this.supabase
+      .from('test_cases')
+      .select('id, title, order_index, preconditions, steps, expected_result')
+      .eq('project_id', id)
+      .order('order_index', { ascending: true });
+
+    if (testCasesError) {
+      console.error('Failed to fetch test cases for export:', testCasesError);
+      throw new Error('Failed to fetch test cases: ' + testCasesError.message);
+    }
+
+    const projectDTO: ProjectDTO = {
+      id: project.id,
+      name: project.name,
+      created_at: project.created_at,
+      rating: project.final_score,
+      testCaseCount: testCases.length
+    };
+
+    const testCaseDTOs: TestCaseDTO[] = testCases.map(tc => ({
+      id: tc.id,
+      title: tc.title,
+      order_index: tc.order_index,
+      preconditions: tc.preconditions,
+      steps: tc.steps,
+      expected_result: tc.expected_result
+    }));
+
+    console.log(`Successfully exported project ${id} with ${testCases.length} test cases`);
+    return { project: projectDTO, testCases: testCaseDTOs };
   }
 }

@@ -34,7 +34,14 @@ export interface ProjectDetailsDTO extends Pick<ProjectDTO, "id" | "name" | "cre
 // Based on the POST /projects endpoint.
 export interface CreateProjectCommand {
   name: string;
-  initialTitles?: string[]; // optional initial input for test case titles
+  initialTitles?: string[]; // optional initial input for test case titles (legacy)
+  testCases?: {
+    title: string;
+    preconditions: string;
+    steps: string;
+    expected_result: string;
+    order_index: number;
+  }[]; // complete test cases with details
 }
 
 // Command model for updating project details.

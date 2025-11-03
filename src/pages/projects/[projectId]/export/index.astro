@@ -1,0 +1,22 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { CsvExportView } from '@/components/export/CsvExportView';
+
+const { projectId } = Astro.params;
+if (!projectId) {
+  return Astro.redirect('/404');
+}
+
+// Validate projectId format (should be UUID)
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if (!uuidRegex.test(projectId)) {
+  return Astro.redirect('/404');
+}
+
+// Disable static generation for this route as it depends on dynamic data
+export const prerender = false;
+---
+
+<Layout title="Export Test Cases to CSV">
+  <CsvExportView client:load projectId={projectId} />
+</Layout>

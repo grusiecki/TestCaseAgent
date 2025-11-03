@@ -61,14 +61,76 @@ export function useGenerateDetails(projectId: string) {
           }
         }
 
-        // Initialize fresh test cases
+        // Try to fetch existing test cases from database first
+        try {
+          console.log('Fetching existing test cases from database...');
+          const response = await fetch(`/api/projects/${projectId}`);
+          if (response.ok) {
+            const projectData = await response.json();
+            const existingTestCases = projectData.testCases || [];
+
+            if (existingTestCases.length > 0) {
+              console.log('Found existing test cases in database:', existingTestCases.length);
+
+              // Check if test cases have details filled in
+              const hasIncompleteDetails = existingTestCases.some((tc: any) =>
+                !tc.steps || tc.steps.trim() === '' ||
+                !tc.expected_result || tc.expected_result.trim() === ''
+              );
+
+              if (!hasIncompleteDetails) {
+                // All test cases have complete details, show them as completed
+                initialTestCases = existingTestCases.map((tc: any, index: number) => ({
+                  id: tc.id,
+                  title: tc.title,
+                  status: 'completed',
+                  preconditions: tc.preconditions || '',
+                  steps: tc.steps || '',
+                  expected_result: tc.expected_result || '',
+                  order_index: tc.order_index
+                }));
+
+                setState(prev => ({
+                  ...prev,
+                  testCases: initialTestCases,
+                  isLoading: false
+                }));
+
+                generateDetailsLogger.info('loaded-complete-existing-test-cases', {
+                  projectId,
+                  testCaseCount: initialTestCases.length
+                });
+
+                return; // Don't generate if we have complete data
+              } else {
+                // Some test cases are missing details, load them and generate missing details
+                console.log('Found incomplete test cases, will generate missing details');
+                initialTestCases = existingTestCases.map((tc: any, index: number) => ({
+                  id: tc.id,
+                  title: tc.title,
+                  status: tc.steps && tc.expected_result ? 'completed' : 'pending',
+                  preconditions: tc.preconditions || '',
+                  steps: tc.steps || '',
+                  expected_result: tc.expected_result || '',
+                  order_index: tc.order_index
+                }));
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching existing test cases:', error);
+        }
+
+        // Initialize fresh test cases if no existing data found
+        console.log('No existing test cases found, creating fresh ones');
         initialTestCases = titles.map((title, index) => ({
-          id: `${index}`,
+          id: `temp-${Date.now()}-${index}`, // Temporary ID until saved to DB
           title,
           status: 'pending',
           preconditions: '',
           steps: '',
-          expected_result: ''
+          expected_result: '',
+          order_index: index
         }));
 
         setState(prev => ({
@@ -77,51 +139,68 @@ export function useGenerateDetails(projectId: string) {
           isLoading: true
         }));
 
-        // Generate all test cases in sequence
+        // Generate details only for test cases that need them (status: 'pending')
         const { documentation, projectName } = TitlesService.loadProjectContext();
-        
-        for (let i = 0; i < initialTestCases.length; i++) {
-          const testCase = initialTestCases[i];
-          try {
-            const result = await AIService.generateDetails({
-              title: testCase.title,
-              context: `Test case ${i + 1} of ${initialTestCases.length}`,
-              projectName,
-              documentation,
-              testCaseIndex: i,
-              totalTestCases: initialTestCases.length,
-              allTitles: titles
-            });
+        const pendingTestCases = initialTestCases.filter(tc => tc.status === 'pending');
 
-            initialTestCases[i] = {
-              ...testCase,
-              ...result,
-              status: 'completed'
-            };
+        if (pendingTestCases.length > 0) {
+          console.log(`Generating details for ${pendingTestCases.length} pending test cases`);
 
-            // Update state after each test case is generated
-            setState(prev => ({
-              ...prev,
-              testCases: [...initialTestCases],
-              isLoading: i < initialTestCases.length - 1 // Only set to false after last test case
-            }));
+          for (let i = 0; i < initialTestCases.length; i++) {
+            const testCase = initialTestCases[i];
 
-            // Save progress after each test case
-            const autosaveData = {
-              projectId,
-              testCases: initialTestCases,
-              lastSaved: new Date().toISOString()
-            };
-            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(autosaveData));
+            // Skip if already completed
+            if (testCase.status === 'completed') {
+              continue;
+            }
 
-          } catch (error) {
-            console.error(`Failed to generate test case ${i + 1}:`, error);
-            initialTestCases[i] = {
-              ...testCase,
-              status: 'error',
-              errorMessage: error instanceof Error ? error.message : 'Failed to generate details'
-            };
+            try {
+              const result = await AIService.generateDetails({
+                title: testCase.title,
+                context: `Test case ${i + 1} of ${initialTestCases.length}`,
+                projectName,
+                documentation,
+                testCaseIndex: i,
+                totalTestCases: initialTestCases.length,
+                allTitles: titles
+              });
+
+              initialTestCases[i] = {
+                ...testCase,
+                ...result,
+                status: 'completed'
+              };
+
+              // Update state after each test case is generated
+              setState(prev => ({
+                ...prev,
+                testCases: [...initialTestCases],
+                isLoading: initialTestCases.some(tc => tc.status === 'pending') // Still loading if any pending
+              }));
+
+              // Save progress after each test case
+              const autosaveData = {
+                projectId,
+                testCases: initialTestCases,
+                lastSaved: new Date().toISOString()
+              };
+              localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(autosaveData));
+
+            } catch (error) {
+              console.error(`Failed to generate test case ${i + 1}:`, error);
+              initialTestCases[i] = {
+                ...testCase,
+                status: 'error',
+                errorMessage: error instanceof Error ? error.message : 'Failed to generate details'
+              };
+            }
           }
+        } else {
+          console.log('All test cases already have details, skipping AI generation');
+          setState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
         }
 
         // Final state update
@@ -292,13 +371,90 @@ export function useGenerateDetails(projectId: string) {
   // as we generate all test cases at initialization
 
   const handleFinishAndExport = async () => {
-    // TODO: Implement export functionality
-    // For now, just clear the localStorage
-    localStorage.removeItem(AUTOSAVE_KEY);
-    TitlesService.clearTitles();
-    
-    // Navigate to dashboard or next step
-    navigate('/dashboard');
+    generateDetailsLogger.exportStarted({
+      projectId,
+      action: 'creating-project-and-navigating-to-export'
+    });
+
+    try {
+      // Create complete project with all test case details
+      const createdProject = await createCompleteProject();
+
+      generateDetailsLogger.exportCompleted({
+        projectId: createdProject.id,
+        action: 'project-created-successfully'
+      });
+
+      // Navigate to export view with real project ID
+      navigate(`/projects/${createdProject.id}/export`);
+    } catch (error) {
+      generateDetailsLogger.exportError({
+        projectId,
+        action: 'failed-to-create-project',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  };
+
+  const createCompleteProject = async () => {
+    generateDetailsLogger.info('creating-complete-project-start', {
+      testCaseCount: state.testCases.length
+    });
+
+    try {
+      // Get project context from localStorage
+      const { documentation, projectName } = TitlesService.loadProjectContext();
+
+      // Prepare complete project data
+      const projectData = {
+        name: projectName || 'Untitled Project',
+        testCases: state.testCases.map(tc => ({
+          title: tc.title,
+          preconditions: tc.preconditions,
+          steps: tc.steps,
+          expected_result: tc.expected_result,
+          order_index: tc.order_index
+        }))
+      };
+
+      generateDetailsLogger.info('creating-project-with-data', {
+        projectName: projectData.name,
+        testCaseCount: projectData.testCases.length
+      });
+
+      // Create project via API
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create project: ${response.status}`);
+      }
+
+      const createdProject = await response.json();
+
+      generateDetailsLogger.info('project-created-successfully', {
+        projectId: createdProject.id,
+        projectName: createdProject.name,
+        testCaseCount: createdProject.testCaseCount
+      });
+
+      // Clear localStorage after successful creation
+      localStorage.removeItem(AUTOSAVE_KEY);
+      TitlesService.clearTitles();
+
+      return createdProject;
+    } catch (error) {
+      generateDetailsLogger.error('project-creation-failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
   };
 
   return {

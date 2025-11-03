@@ -109,7 +109,7 @@ Interfejs korzysta z responsywnego designu opartego o Tailwind CSS i komponenty 
 - **Główny cel:** Umożliwienie eksportu danych test case w formacie CSV zgodnym z TestRail.
 - **Kluczowe informacje do wyświetlenia:**
   - Podsumowanie projektu oraz listy test case'ów.
-  - Przycisk "Export", który wyzwala generowanie CSV.
+  - Przycisk "Export", który wyzwala generowanie CSV i pobiera plik
 - **Kluczowe komponenty widoku:**
   - Komponent podsumowania danych projektu.
   - Przycisk eksportu.
