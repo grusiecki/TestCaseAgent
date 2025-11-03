@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ProjectSummary } from './ProjectSummary';
 import { TestCaseList } from './TestCaseList';
 import { ExportButton } from './ExportButton';
 import { FeedbackMessage } from './FeedbackMessage';
 import { useCsvExport } from './hooks/useCsvExport';
 import { csvExportLogger } from '@/lib/logging/csv-export.logger';
+import { useNavigate } from '@/lib/hooks/useNavigate';
 import type { ProjectDTO, TestCaseDTO } from '@/types';
 
 interface CsvExportViewProps {
@@ -13,13 +15,14 @@ interface CsvExportViewProps {
 }
 
 export function CsvExportView({ projectId }: CsvExportViewProps) {
+  const navigate = useNavigate();
   const [project, setProject] = useState<ProjectDTO | null>(null);
   const [testCases, setTestCases] = useState<TestCaseDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [componentError, setComponentError] = useState<string | null>(null);
 
-  const { exportStatus, feedbackMessage, handleExport } = useCsvExport(projectId);
+  const { exportStatus, feedbackMessage, hasExportedSuccessfully, handleExport } = useCsvExport(projectId);
 
   // Error boundary for component errors
   useEffect(() => {
@@ -156,6 +159,18 @@ export function CsvExportView({ projectId }: CsvExportViewProps) {
                 message={feedbackMessage}
                 type={exportStatus === 'success' ? 'success' : exportStatus === 'error' ? 'error' : 'info'}
               />
+            )}
+
+            {hasExportedSuccessfully && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-2"
+                >
+                  ← Back to Dashboard
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>

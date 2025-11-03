@@ -6,6 +6,7 @@ export type ExportStatus = 'idle' | 'loading' | 'success' | 'error';
 export function useCsvExport(projectId: string) {
   const [exportStatus, setExportStatus] = useState<ExportStatus>('idle');
   const [feedbackMessage, setFeedbackMessage] = useState<string>('');
+  const [hasExportedSuccessfully, setHasExportedSuccessfully] = useState<boolean>(false);
 
   const handleExport = async (): Promise<void> => {
     csvExportLogger.exportAction('start', {
@@ -66,12 +67,13 @@ export function useCsvExport(projectId: string) {
       });
 
       setExportStatus('success');
+      setHasExportedSuccessfully(true);
       setFeedbackMessage(`Successfully exported ${filename}`);
 
-      // Clear success message after 5 seconds
+      // Clear success message after 5 seconds, but keep export status as success
       setTimeout(() => {
         setFeedbackMessage('');
-        setExportStatus('idle');
+        // Don't reset to 'idle' - keep success status for the button
       }, 5000);
 
     } catch (error) {
@@ -92,6 +94,7 @@ export function useCsvExport(projectId: string) {
   return {
     exportStatus,
     feedbackMessage,
+    hasExportedSuccessfully,
     handleExport
   };
 }
