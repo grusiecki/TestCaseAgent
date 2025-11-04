@@ -13,17 +13,15 @@ const mockProject = {
 describe("ProjectCard", () => {
   const mockOnExport = vi.fn();
   const mockOnDelete = vi.fn();
-  const mockOnSelect = vi.fn();
 
   beforeEach(() => {
     mockOnExport.mockReset();
     mockOnDelete.mockReset();
-    mockOnSelect.mockReset();
   });
 
   it("renders project details correctly", () => {
     render(
-      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} onSelect={mockOnSelect} />
+      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText("Test Project")).toBeInTheDocument();
@@ -39,25 +37,15 @@ describe("ProjectCard", () => {
         project={projectWithNullRating}
         onExport={mockOnExport}
         onDelete={mockOnDelete}
-        onSelect={mockOnSelect}
       />
     );
 
     expect(screen.getByText("N/A")).toBeInTheDocument();
   });
 
-  it("calls onSelect when card is clicked", () => {
-    render(
-      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} onSelect={mockOnSelect} />
-    );
-
-    fireEvent.click(screen.getByRole("article"));
-    expect(mockOnSelect).toHaveBeenCalledWith(mockProject.id);
-  });
-
   it("shows delete confirmation dialog", async () => {
     render(
-      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} onSelect={mockOnSelect} />
+      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} />
     );
 
     // Click delete button
@@ -68,18 +56,17 @@ describe("ProjectCard", () => {
     expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
 
     // Cancel deletion
-    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+    fireEvent.click(screen.getByRole("button", { name: /no/i }));
     expect(mockOnDelete).not.toHaveBeenCalled();
 
     // Confirm deletion
-    fireEvent.click(screen.getByRole("button", { name: /delete/i }));
-    fireEvent.click(screen.getByRole("button", { name: /delete project/i }));
+    fireEvent.click(screen.getByRole("button", { name: /yes, delete/i }));
     expect(mockOnDelete).toHaveBeenCalledWith(mockProject.id);
   });
 
   it("handles export action", async () => {
     render(
-      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} onSelect={mockOnSelect} />
+      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} />
     );
 
     // Click export button
@@ -92,7 +79,7 @@ describe("ProjectCard", () => {
     mockOnDelete.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
     render(
-      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} onSelect={mockOnSelect} />
+      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} />
     );
 
     // Test export loading state
@@ -101,8 +88,8 @@ describe("ProjectCard", () => {
 
     // Test delete loading state
     fireEvent.click(screen.getByRole("button", { name: /delete/i }));
-    fireEvent.click(screen.getByRole("button", { name: /delete project/i }));
-    expect(screen.getByRole("button", { name: /delete project/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /yes, delete/i }));
+    expect(screen.getByRole("button", { name: /yes, delete/i })).toBeDisabled();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /export/i })).not.toBeDisabled();

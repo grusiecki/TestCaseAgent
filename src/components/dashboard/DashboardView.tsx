@@ -36,9 +36,6 @@ export function DashboardView() {
     );
   }
 
-  const handleProjectSelect = (projectId: string) => {
-    window.location.href = `/projects/${projectId}`;
-  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -65,7 +62,6 @@ export function DashboardView() {
             isLoading={isLoading}
             onExport={exportProject}
             onDelete={deleteProject}
-            onSelect={handleProjectSelect}
           />
         </div>
 

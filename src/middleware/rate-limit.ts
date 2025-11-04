@@ -65,3 +65,6 @@ export const rateLimit = (config: RateLimitConfig = defaultConfig) => {
     });
   };
 };
+
+// Middleware function for use in middleware sequence
+export const rateLimitMiddleware = rateLimit();

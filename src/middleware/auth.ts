@@ -75,3 +75,26 @@ export const authMiddleware = defineMiddleware(async (context, next) => {
     return context.redirect('/');
   }
 });
+
+// Helper function for API routes to require authentication
+export const requireAuth = async (context: any) => {
+  try {
+    // Get session from Supabase
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    // If there's an error or no session, throw error
+    if (error || !session) {
+      throw new Error('Unauthorized');
+    }
+
+    // Add user info to locals for use in handlers
+    Object.assign(context.locals, {
+      session,
+      user: session.user,
+      supabase
+    });
+  } catch (error) {
+    console.error('Auth check error:', error);
+    throw new Error('Authentication required');
+  }
+};

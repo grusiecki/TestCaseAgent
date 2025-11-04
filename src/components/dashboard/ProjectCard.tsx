@@ -8,12 +8,11 @@ import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
   project: ProjectDTO;
-  onExport: (projectId: string) => Promise<void>;
+  onExport: (projectId: string) => void;
   onDelete: (projectId: string) => Promise<void>;
-  onSelect: (projectId: string) => void;
 }
 
-export function ProjectCard({ project, onExport, onDelete, onSelect }: ProjectCardProps) {
+export function ProjectCard({ project, onExport, onDelete }: ProjectCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -28,12 +27,12 @@ export function ProjectCard({ project, onExport, onDelete, onSelect }: ProjectCa
     }
   };
 
-  const handleExport = async (e: React.MouseEvent) => {
+  const handleExport = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isExporting) {
       setIsExporting(true);
       try {
-        await onExport(project.id);
+        onExport(project.id);
       } finally {
         setIsExporting(false);
       }
@@ -47,11 +46,8 @@ export function ProjectCard({ project, onExport, onDelete, onSelect }: ProjectCa
       <Card
         className={cn(
           "group relative overflow-hidden transition-all duration-300",
-          "hover:shadow-lg dark:hover:shadow-primary/10",
-          "hover:scale-[1.02] active:scale-[0.98]",
-          "cursor-pointer"
+          "hover:shadow-lg dark:hover:shadow-primary/10"
         )}
-        onClick={() => onSelect(project.id)}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <CardHeader>
@@ -133,7 +129,7 @@ export function ProjectCard({ project, onExport, onDelete, onSelect }: ProjectCa
           </DialogHeader>
           <DialogFooter className="flex space-x-2 justify-end">
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isDeleting}>
-              Cancel
+              No
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} className="relative group">
               {isDeleting ? (
@@ -141,7 +137,7 @@ export function ProjectCard({ project, onExport, onDelete, onSelect }: ProjectCa
               ) : (
                 <Trash2 className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
               )}
-              Delete Project
+              Yes, Delete
             </Button>
           </DialogFooter>
         </DialogContent>

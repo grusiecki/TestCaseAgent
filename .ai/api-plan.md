@@ -47,6 +47,7 @@
   - Success Response: Updated project object.
   - Error Codes: 400 Bad Request, 401 Unauthorized, 404 Not Found
 
+
 - **DELETE /projects/:id**
   - Description: Soft delete a project (set `deleted_at` instead of hard delete).
   - Success Response: `{ "message": "Project deleted successfully" }`

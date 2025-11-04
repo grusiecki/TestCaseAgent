@@ -78,7 +78,7 @@ export function CsvExportView({ projectId }: CsvExportViewProps) {
         setTestCases(testCases);
         setIsLoading(false);
 
-        csvExportLogger.componentLifecycle('data-loaded', {
+        csvExportLogger.componentLifecycle('render', {
           projectId,
           testCaseCount: testCases.length,
           projectName: project.name
@@ -161,17 +161,15 @@ export function CsvExportView({ projectId }: CsvExportViewProps) {
               />
             )}
 
-            {hasExportedSuccessfully && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/dashboard')}
-                  className="px-6 py-2"
-                >
-                  ← Back to Dashboard
-                </Button>
-              </div>
-            )}
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-2"
+              >
+                ← Back to Dashboard
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

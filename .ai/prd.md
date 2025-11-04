@@ -17,6 +17,7 @@ Rozwiązanie: AI analizuje dokumentację → generuje tytuły TC → generuje sz
 	•	Weryfikacja email przed pierwszym logowaniem
 	•	JWT token (7 dni validity)
 	•	Supabase Auth + Row Level Security
+	•	Zmiana hasła przez uzytkownika
 3.2. Główny Workflow (4 etapy na jednej stronie)
 Etap 1: Input dokumentacji
 	•	Textarea: 100-5000 znaków (walidacja)
@@ -78,6 +79,8 @@ US-Core-1: Jako tester wklejam dokumentację (100-5000 chars) → AI generuje ty
 US-Core-2: AI automatycznie generuje szczegóły per TC → mogę edytować preconditions/steps/expected result → nawiguję między TC → kończę edycję.
 US-Core-3: Eksportuję CSV kompatybilny z TestRail → oceniam jakość 1-5 gwiazdek → wracam do dashboard.
 US-Core-4: Widzę dashboard z moimi projektami → mogę przeglądać szczegóły → re-exportować → usuwać projekty.
+US-Core-5 Ekran logowania -> uzytkownik loguje się podanymi loginem i haslem > user jest na dashboard
+US-Core-6 Ekran logowania -> Button Change password -> user wpisuje swojego maila -> otwiera link w mailu -> User wpisuje haslo i powtarza wciska button change password -> user jest na login screen
 7. Metryki Sukcesu
 Jakość Produktu:
 	•	User Satisfaction: Średnia ocena ≥ 3.5/5 → cel: 4.0/5

@@ -12,7 +12,10 @@ export default defineConfig({
   integrations: [react(), sitemap()],
   // Enable view transitions for smooth page navigation
   transitions: true,
-  server: { port: 3000 },
+  server: {
+    port: 3000,
+    host: true
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {
@@ -20,11 +23,6 @@ export default defineConfig({
         '@': '/src'
       }
     }
-  },
-  // Server-side environment variables configuration
-  server: {
-    port: 3000,
-    host: true
   },
   adapter: node({
     mode: "standalone",

@@ -31,7 +31,7 @@ export class TestCaseService {
       .from('test_cases')
       .select('*', { count: 'exact' })
       .eq('project_id', projectId)
-      .eq('deleted_at', null)
+      .is('deleted_at', null)
       .order('order_index', { ascending: true })
       .range(offset, offset + limit - 1);
 
@@ -64,7 +64,7 @@ export class TestCaseService {
       .from('test_cases')
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId)
-      .eq('deleted_at', null);
+      .is('deleted_at', null);
 
     if (error) {
       console.error('Failed to count test cases:', error);
@@ -111,7 +111,7 @@ export class TestCaseService {
       .select('id, title, order_index, preconditions, steps, expected_result')
       .eq('id', testCaseId)
       .eq('project_id', projectId)
-      .eq('deleted_at', null)
+      .is('deleted_at', null)
       .single();
 
     if (error) {
@@ -143,7 +143,7 @@ export class TestCaseService {
       })
       .eq('id', testCaseId)
       .eq('project_id', projectId)
-      .eq('deleted_at', null)
+      .is('deleted_at', null)
       .select('id, title, order_index, preconditions, steps, expected_result')
       .single();
 

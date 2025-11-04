@@ -17,7 +17,7 @@ interface DashboardState {
 interface DashboardActions {
   fetchProjects: () => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
-  exportProject: (projectId: string) => Promise<void>;
+  exportProject: (projectId: string) => void;
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
 }
@@ -117,43 +117,9 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     [fetchProjects]
   );
 
-  const exportProject = useCallback(async (projectId: string) => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const response = await fetch(`/api/projects/${projectId}/export`, {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          response.status === 404
-            ? "Project not found"
-            : response.status === 401
-              ? "You don't have permission to export this project"
-              : "Failed to export project"
-        );
-      }
-
-      // Handle successful export
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `project-${projectId}-export.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      setState((prev) => ({ ...prev, isLoading: false }));
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        error: getErrorMessage(error),
-        isLoading: false,
-      }));
-    }
+  const exportProject = useCallback((projectId: string) => {
+    // Navigate to export view instead of downloading
+    window.location.href = `/projects/${projectId}/export`;
   }, []);
 
   const setPage = useCallback((page: number) => {

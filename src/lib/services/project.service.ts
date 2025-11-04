@@ -110,6 +110,7 @@ export class ProjectService {
     const { data: projects, error } = await this.supabase
       .from('projects')
       .select('id, name, created_at, final_score, test_cases(count)')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -141,6 +142,7 @@ export class ProjectService {
         name: input.name,
       })
       .eq('id', id)
+      .is('deleted_at', null)
       .select('id, name, created_at, final_score, test_cases(count)')
       .single();
 
@@ -167,19 +169,20 @@ export class ProjectService {
   }
 
   async deleteProject(id: string): Promise<void> {
-    console.log(`Deleting project ${id}...`);
+    console.log(`Soft deleting project ${id}...`);
 
     const { error } = await this.supabase
       .from('projects')
-      .delete()
-      .eq('id', id);
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
+      .is('deleted_at', null);
 
     if (error) {
-      console.error('Failed to delete project:', error);
+      console.error('Failed to soft delete project:', error);
       throw new Error('Failed to delete project: ' + error.message);
     }
 
-    console.log(`Project ${id} deleted successfully`);
+    console.log(`Project ${id} soft deleted successfully`);
   }
 
   async exportProject(id: string): Promise<{ project: ProjectDTO; testCases: TestCaseDTO[] }> {
@@ -190,6 +193,7 @@ export class ProjectService {
       .from('projects')
       .select('id, name, created_at, final_score')
       .eq('id', id)
+      .is('deleted_at', null)
       .single();
 
     if (projectError) {
