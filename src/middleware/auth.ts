@@ -10,7 +10,8 @@ const publicApiRoutes = [
   '/api/auth/login',
   '/api/auth/check-session',
   '/api/auth/request-password-reset',
-  '/api/auth/reset-password'
+  '/api/auth/reset-password',
+  '/api/auth/logout'
 ];
 
 // Helper function to check if a route is public

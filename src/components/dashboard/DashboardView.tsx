@@ -2,6 +2,7 @@ import { DashboardStats } from "./DashboardStats";
 import { ProjectList } from "./ProjectList";
 import { Pagination } from "./Pagination";
 import { NewProjectButton } from "./NewProjectButton";
+import { LogoutButton } from "./LogoutButton";
 import { useDashboard } from "./hooks/useDashboard";
 import { useAuthGuard } from "../../lib/hooks/useAuthGuard";
 import { Button } from "../ui/button";
@@ -44,7 +45,10 @@ export function DashboardView() {
           <h1 className="text-3xl font-bold tracking-tight">Your Projects</h1>
           <p className="text-muted-foreground">Manage and monitor your test case projects</p>
         </div>
-        <NewProjectButton />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <NewProjectButton />
+          <LogoutButton />
+        </div>
       </div>
 
       <div className="space-y-8">
