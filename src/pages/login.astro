@@ -1,0 +1,21 @@
+---
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { LoginForm } from '../components/auth/LoginForm';
+import { supabase } from '../db/supabase.client';
+
+// Check if user is already logged in
+const { data: { session } } = await supabase.auth.getSession();
+
+// If logged in, redirect to dashboard
+if (session) {
+  return Astro.redirect('/dashboard');
+}
+---
+
+<AuthLayout title="Sign In">
+  <fragment slot="subtitle">
+    Sign in to your account to continue
+  </fragment>
+
+  <LoginForm client:load />
+</AuthLayout>

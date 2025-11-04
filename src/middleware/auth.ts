@@ -2,13 +2,15 @@ import { defineMiddleware } from 'astro:middleware';
 import { supabase } from '../db/supabase.client';
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/', '/temp-login'];
+const publicRoutes = ['/', '/temp-login', '/login', '/change-password'];
 
 // List of public API routes
 const publicApiRoutes = [
   '/api/auth/temp-login',
   '/api/auth/login',
-  '/api/auth/check-session'
+  '/api/auth/check-session',
+  '/api/auth/request-password-reset',
+  '/api/auth/reset-password'
 ];
 
 // Helper function to check if a route is public
