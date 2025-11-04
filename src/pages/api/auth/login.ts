@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6, "Password must be at least 6 characters"), // Allow test123
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export const prerender = false;

@@ -1,6 +1,4 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { TempLoginForm } from '../components/auth/TempLoginForm';
 import { supabase } from '../db/supabase.client';
 
 // Check if user is already logged in
@@ -10,10 +8,7 @@ const { data: { session } } = await supabase.auth.getSession();
 if (session) {
   return Astro.redirect('/dashboard');
 }
----
 
-<Layout title="Login">
-  <main class="min-h-screen flex items-center justify-center">
-    <TempLoginForm client:load />
-  </main>
-</Layout>
+// If not logged in, redirect to login page
+return Astro.redirect('/login');
+---

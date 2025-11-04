@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { DashboardView } from '../components/dashboard/DashboardView';
-import { TempLoginForm } from '../components/auth/TempLoginForm';
 import { supabase } from '../db/supabase.client';
 
 // Check authentication
@@ -16,7 +15,15 @@ const isAuthenticated = !!session;
         <DashboardView client:load />
       </div>
     ) : (
-      <TempLoginForm client:load />
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Access Denied</h1>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">Please log in to access the dashboard.</p>
+          <a href="/login" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Go to Login
+          </a>
+        </div>
+      </div>
     )}
   </main>
 </Layout>
