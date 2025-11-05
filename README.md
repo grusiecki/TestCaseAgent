@@ -21,10 +21,11 @@ Tech stack
 	•	Astro 5: framework optimized for fast sites and SSR/SSG, with React integration .
 	•	React 19: stable release with improvements in RSC, forms, and performance .
 	•	Tailwind v4: new engine, simplified configuration, and a modern CSS utilities API .
-	•	shadcn/ui: a set of composable, accessible components with “open code” for full customizability .
+	•	shadcn/ui: a set of composable, accessible components with "open code" for full customizability .
 	•	Supabase (Auth, DB, RLS, Storage): authorization and RLS policies directly in Postgres .
 	•	OpenRouter: unified API for LLMs, Bearer authorization, parameters, and limits .
 	•	Docker + DigitalOcean: image build, registry, deployment via App Platform or droplet .
+	•	Testing: Vitest for unit and integration tests, Playwright for E2E and API tests, React Testing Library for component testing .
 Requirements
 	•	Node.js 18+ and pnpm/yarn/npm for local work with Astro/React .
 	•	Supabase account with a project, configured Auth, and RLS enabled .
@@ -93,6 +94,22 @@ Tips: expose the correct port, add environment variables (Supabase/OpenRouter ke
 CI/CD (outline)
 	•	Pipeline: image build, basic tests, push to registry, and rollout to the target environment upon approval .
 	•	Container registry: use DO Container Registry or Docker Hub with version tags and release channels .
+	•	GitHub Actions: automated test execution on every push and pull request .
+Testing strategy
+	•	Multi‑level approach: static code analysis (ESLint/Prettier), unit tests, component tests, integration tests, E2E tests, API tests, and non‑functional tests .
+	•	Test pyramid: focus on unit and integration tests as the foundation, with critical user flows covered by E2E tests .
+	•	Priorities: P1 (Critical) — project creation flow, authentication, data persistence; P2 (High) — dashboard features, title editing, CSV export; P3 (Medium) — form validation, edge cases, responsiveness; P4 (Low) — minor UI elements .
+	•	Acceptance criteria: >80% code coverage for business logic, all P1 and P2 scenarios passing, no critical or blocking bugs .
+	•	Test environments: local (unit/integration), staging/test on DigitalOcean (E2E, performance, UAT) with separate Supabase instance .
+	•	Tools: Vitest (test runner), React Testing Library (component tests), Playwright (E2E and API tests), GitHub Actions (CI/CD automation) .
+Key test areas
+	•	Authentication: login, logout, password reset, session management .
+	•	Project creation: documentation input validation, title generation, title editing (add/remove/modify up to 20) .
+	•	Detail generation: AI integration, navigation between test cases, manual editing with autosave, error handling .
+	•	Dashboard: project list with pagination, project deletion (soft delete), statistics display .
+	•	CSV export: data preview, file generation, TestRail compatibility .
+	•	API endpoints: all CRUD operations, input validation (Zod schemas), error handling, rate limiting .
+	•	Middleware: rate limiting, payload size limits, authorization checks .
 MVP boundaries
 	•	No roles/sharing or team editing, no direct integrations with TestRail/Jira, no advanced analytics, no dark mode, and no keyboard shortcuts .
 	•	Generation and interface output in English only at this stage on the AI side .
@@ -109,5 +126,7 @@ Developer tips
 	•	TestRail: in the import wizard choose the single‑row layout and map the Title/Steps/Expected Result/Preconditions columns .
 	•	Supabase RLS: remember to enable RLS and test policies for SELECT/INSERT/UPDATE/DELETE separately .
 	•	OpenRouter: plan retry/fallback and token limits, log response times and error codes .
+	•	Testing: run unit/integration tests with `npm test` or `npm run test:watch`; run E2E tests with `npm run test:e2e`; aim for >80% code coverage on new business logic .
+	•	Test data: use at least two test users to verify data isolation; prepare documentation samples of varying lengths (150–4500 words) and edge cases (special characters, long strings) .
 License
 License information will be added before the repository is made public or with the first release version .

@@ -1,0 +1,24 @@
+# Test artifacts and results
+# Add these lines to your main .gitignore
+
+# Vitest
+coverage/
+*.coverage
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Test environment
+.env.test
+.env.test.local
+
+# Test screenshots and videos
+tests/e2e/screenshots/
+tests/e2e/videos/
+
+# Test logs
+*.test.log
+test-*.log
+

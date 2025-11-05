@@ -13,7 +13,7 @@ export default defineConfig({
   // Enable view transitions for smooth page navigation
   transitions: true,
   server: {
-    port: 3000,
+    port: 4321,
     host: true
   },
   vite: {

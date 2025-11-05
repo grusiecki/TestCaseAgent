@@ -4,6 +4,7 @@ Frontend - Astro z React dla komponentów interaktywnych:
 - TypeScript 5 dla statycznego typowania kodu i lepszego wsparcia IDE
 - Tailwind 4 pozwala na wygodne stylowanie aplikacji
 - Shadcn/ui zapewnia bibliotekę dostępnych komponentów React, na których oprzemy UI
+- ESLint i Prettier dla analizy statycznej i spójności kodu
 
 Backend - Supabase jako kompleksowe rozwiązanie backendowe:
 - Zapewnia bazę danych PostgreSQL
@@ -16,5 +17,12 @@ AI - Komunikacja z modelami przez usługę OpenAi.ai:
 - Pozwala na ustawianie limitów finansowych na klucze API
 
 CI/CD i Hosting:
-- Github Actions do tworzenia pipeline’ów CI/CD
+- Github Actions do tworzenia pipeline'ów CI/CD
 - DigitalOcean do hostowania aplikacji za pośrednictwem obrazu docker
+
+Testowanie:
+- Vitest jako test runner do testów jednostkowych i integracyjnych
+- React Testing Library do testowania komponentów React w izolacji
+- Playwright do testów End-to-End (E2E) i testów API
+- GitHub Actions do automatycznego uruchamiania testów przy każdym pushu i PR
+
