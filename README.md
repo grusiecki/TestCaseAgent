@@ -110,6 +110,61 @@ Key test areas
 	•	CSV export: data preview, file generation, TestRail compatibility .
 	•	API endpoints: all CRUD operations, input validation (Zod schemas), error handling, rate limiting .
 	•	Middleware: rate limiting, payload size limits, authorization checks .
+Running tests
+Unit and integration tests (Vitest)
+	•	Run all unit tests: `npm test` or `npm run test`
+	•	Run tests in watch mode: `npm run test:watch`
+	•	Run tests with coverage: `npm run test:coverage`
+	•	Run specific test file: `npm test -- path/to/test.test.ts`
+	•	Run specific test suite: `npm test -- -t "test suite name"`
+	•	Run tests in UI mode: `npm run test:ui`
+Examples:
+# Run all unit tests
+npm test
+
+# Run validation tests only
+npm test -- src/components/dashboard/utils/__tests__/validation.test.ts
+
+# Run tests matching pattern
+npm test -- -t "validateProject"
+
+# Watch mode for development
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+E2E tests (Playwright)
+	•	Run all E2E tests: `npm run test:e2e`
+	•	Run E2E tests in headed mode: `npm run test:e2e -- --headed`
+	•	Run specific E2E test file: `npm run test:e2e -- tests/e2e/auth.e2e.test.ts`
+	•	Run E2E tests in UI mode: `npm run test:e2e -- --ui`
+	•	Debug E2E tests: `npm run test:e2e -- --debug`
+Examples:
+# Run all E2E tests
+npm run test:e2e
+
+# Run authentication tests only
+npm run test:e2e -- tests/e2e/auth.e2e.test.ts
+
+# Run in headed mode (see browser)
+npm run test:e2e -- --headed
+
+# Debug mode with Playwright Inspector
+npm run test:e2e -- --debug
+
+# Run in UI mode
+npm run test:e2e -- --ui
+Test reports and debugging
+	•	Unit test results: displayed in terminal with verbose output
+	•	Coverage reports: generated in `coverage/` directory (HTML report at `coverage/index.html`)
+	•	E2E test reports: generated in `playwright-report/` directory
+	•	E2E test artifacts: screenshots and videos saved in `test-results/` on failure
+	•	View Playwright report: `npx playwright show-report`
+CI/CD integration
+	•	Tests run automatically on every push and pull request via GitHub Actions
+	•	Unit tests must pass before E2E tests are executed
+	•	Coverage thresholds enforced: 80% lines, 80% functions, 75% branches, 80% statements
+	•	Failed tests block deployment to staging/production environments
 MVP boundaries
 	•	No roles/sharing or team editing, no direct integrations with TestRail/Jira, no advanced analytics, no dark mode, and no keyboard shortcuts .
 	•	Generation and interface output in English only at this stage on the AI side .

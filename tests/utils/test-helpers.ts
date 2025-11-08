@@ -2,7 +2,7 @@
  * Utility functions for tests
  */
 
-import { Page, expect } from '@playwright/test';
+import {  expect, type Page } from '@playwright/test';
 
 /**
  * Wait for element to be visible with custom timeout

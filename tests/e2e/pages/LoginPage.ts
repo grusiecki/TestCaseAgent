@@ -23,7 +23,7 @@ export class LoginPage extends BasePage {
     this.passwordInput = page.locator('input[type="password"], input[name="password"]');
     this.loginButton = page.locator('button[type="submit"]:has-text("Login"), button:has-text("Sign in")');
     this.errorMessage = page.locator('[role="alert"], .error-message, .alert-error');
-    this.resetPasswordLink = page.locator('a:has-text("Forgot password"), a:has-text("Reset password")');
+    this.resetPasswordLink = page.getByRole('button', { name: 'Forgot your password?' })
     this.successMessage = page.locator('.success-message, .alert-success');
   }
 

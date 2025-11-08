@@ -3,7 +3,7 @@
  * Handles all interactions with the dashboard page
  */
 
-import { Page, Locator, expect } from '@playwright/test';
+import { type Page, type Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export class DashboardPage extends BasePage {
@@ -21,6 +21,7 @@ export class DashboardPage extends BasePage {
   readonly loadingSpinner: Locator;
   readonly emptyState: Locator;
   readonly projectStats: Locator;
+  readonly logoutButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -28,6 +29,7 @@ export class DashboardPage extends BasePage {
     // Initialize locators
     this.pageTitle = page.locator('h1, h2').first();
     this.newProjectButton = page.locator('button:has-text("New Project"), a:has-text("Create Project")');
+    this.logoutButton = page.locator('button:has-text("Logout"), button[aria-label*="Logout"]');
     this.projectCards = page.locator('[data-testid="project-card"], .project-card');
     this.projectCard = (projectName: string) => 
       page.locator(`[data-testid="project-card"]:has-text("${projectName}"), .project-card:has-text("${projectName}")`);

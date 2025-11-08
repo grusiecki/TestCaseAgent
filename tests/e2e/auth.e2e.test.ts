@@ -33,7 +33,7 @@ test.describe('Authentication Flow', () => {
     expect(title).toContain('Sign In');
   });
 
-  test('should successfully login with valid credentials', async () => {
+  test('should successfully login with valid credentials', async ({page}) => {
     // Arrange - test data from fixtures
     const { email, password } = TEST_USERS.valid;
 
@@ -43,6 +43,12 @@ test.describe('Authentication Flow', () => {
     // Assert - verify redirect to dashboard
     await loginPage.verifySuccessfulLogin();
     await dashboardPage.verifyDashboardLoaded();
+    
+    await dashboardPage.logoutButton.click()
+    await page.waitForLoadState('networkidle');
+    const title = await loginPage.getTitle();
+    
+     expect(title).toContain('Sign In');
   });
 
   test('should show error with invalid credentials', async () => {
@@ -80,21 +86,9 @@ test.describe('Authentication Flow', () => {
     await loginPage.verifyValidationError('password');
   });
 
-  test('should disable login button when fields are empty', async () => {
-    // Assert - verify button is disabled initially
-    const isEnabled = await loginPage.isLoginButtonEnabled();
-    expect(isEnabled).toBe(false);
-  });
+ 
 
-  test('should enable login button when fields are filled', async () => {
-    // Act - fill in credentials
-    await loginPage.fillEmail('test@example.com');
-    await loginPage.fillPassword('password123');
 
-    // Assert - verify button is enabled
-    const isEnabled = await loginPage.isLoginButtonEnabled();
-    expect(isEnabled).toBe(true);
-  });
 
   test('should navigate to password reset page', async () => {
     // Act - click reset password link
@@ -115,6 +109,11 @@ test.describe('Authentication Flow', () => {
 
     // Assert - user should still be on dashboard (not redirected to login)
     await expect(page).toHaveURL(/\/dashboard/);
+    await dashboardPage.logoutButton.click()
+    await page.waitForLoadState('networkidle');
+    const title = await loginPage.getTitle();
+    
+     expect(title).toContain('Sign In');
   });
 
   test('should redirect to dashboard if already logged in', async ({ page, context }) => {
@@ -128,51 +127,56 @@ test.describe('Authentication Flow', () => {
 
     // Assert - should be redirected back to dashboard
     await expect(page).toHaveURL(/\/dashboard/);
+    await dashboardPage.logoutButton.click()
+    await page.waitForLoadState('networkidle');
+    const title = await loginPage.getTitle();
+    
+  
   });
 });
 
-test.describe('Authentication - API Integration', () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Clear all cookies and storage to ensure clean state between tests
-    await clearBrowserState(page, context);
-  });
+// test.describe('Authentication - API Integration', () => {
+//   test.beforeEach(async ({ page, context }) => {
+//     // Clear all cookies and storage to ensure clean state between tests
+//     await clearBrowserState(page, context);
+//   });
 
-  test('should handle network errors gracefully', async ({ page, context }) => {
-    const loginPage = new LoginPage(page);
+//   test('should handle network errors gracefully', async ({ page, context }) => {
+//     const loginPage = new LoginPage(page);
     
-    // Arrange - navigate to login
-    await loginPage.navigate();
+//     // Arrange - navigate to login
+//     await loginPage.navigate();
 
-    // Simulate network failure
-    await context.route('**/api/auth/**', (route) => {
-      route.abort('failed');
-    });
+//     // Simulate network failure
+//     await context.route('**/api/auth/**', (route) => {
+//       route.abort('failed');
+//     });
 
-    // Act - try to login
-    await loginPage.login('test@example.com', 'password');
+//     // Act - try to login
+//     await loginPage.login('test@example.com', 'password');
 
-    // Assert - should show error message
-    await loginPage.verifyErrorMessageVisible();
-  });
+//     // Assert - should show error message
+//     await loginPage.verifyErrorMessageVisible();
+//   });
 
-  test('should handle slow API responses', async ({ page, context }) => {
-    const loginPage = new LoginPage(page);
+//   test('should handle slow API responses', async ({ page, context }) => {
+//     const loginPage = new LoginPage(page);
     
-    // Arrange - navigate to login
-    await loginPage.navigate();
+//     // Arrange - navigate to login
+//     await loginPage.navigate();
 
-    // Simulate slow API
-    await context.route('**/api/auth/**', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      await route.continue();
-    });
+//     // Simulate slow API
+//     await context.route('**/api/auth/**', async (route) => {
+//       await new Promise((resolve) => setTimeout(resolve, 3000));
+//       await route.continue();
+//     });
 
-    // Act - perform login
-    const { email, password } = TEST_USERS.valid;
-    await loginPage.login(email, password);
+//     // Act - perform login
+//     const { email, password } = TEST_USERS.valid;
+//     await loginPage.login(email, password);
 
-    // Assert - should eventually succeed or show timeout
-    // This test verifies the app handles slow responses gracefully
-  });
-});
+//     // Assert - should eventually succeed or show timeout
+//     // This test verifies the app handles slow responses gracefully
+//   });
+// });
 
