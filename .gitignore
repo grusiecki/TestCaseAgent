@@ -24,7 +24,6 @@ pnpm-debug.log*
 .idea/
 
 # Testing
-fixtures/
 test-results/
 playwright-report/
 playwright/.cache/

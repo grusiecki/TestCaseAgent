@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
-import { TEST_USERS } from '../fixtures/test-data.js';
+import { TEST_USERS } from './fixtures/test-data.js';
 import { clearBrowserState } from './helpers/test-helpers.js';
 
 test.describe('Authentication Flow', () => {
