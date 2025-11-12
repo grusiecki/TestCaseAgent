@@ -11,7 +11,7 @@ playwright-report/
 playwright/.cache/
 
 # Test environment
-.env.test
+.env
 .env.test.local
 
 # Test screenshots and videos
