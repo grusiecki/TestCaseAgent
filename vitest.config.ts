@@ -6,11 +6,19 @@ export default defineConfig({
   plugins: [react()],
   test: {
     // Environment configuration
-    environment: 'jsdom',
+    environment: 'happy-dom',
     
     // Global setup and teardown
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    
+    // Pool options for better stability in CI
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     
     // Coverage configuration
     coverage: {
