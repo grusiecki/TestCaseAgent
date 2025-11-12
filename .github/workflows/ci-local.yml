@@ -51,5 +51,13 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
+      - name: Create .env.test file for E2E tests
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env.test
+          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env.test
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env.test
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env.test
+          echo ".env.test file created with secrets"
+
       - name: Run E2E tests
         run: npm run test:e2e
