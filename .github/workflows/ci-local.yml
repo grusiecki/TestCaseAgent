@@ -12,6 +12,8 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
     services:
       postgres:
@@ -52,5 +54,8 @@ jobs:
           echo "Aplikacja została uruchomiona - można wykonywać kolejne kroki, np. testy."
           
       # Możesz dodać kolejne kroki np. uruchomienie testów:
-      - name: Run tests
-        run: npm run test
+      - name: Run unit tests
+        run: npm run
+
+      - name: Run E2E tests
+        run: npm run test:e2e

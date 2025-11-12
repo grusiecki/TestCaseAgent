@@ -3,7 +3,7 @@
  * Provides utilities for test setup, cleanup, and common operations
  */
 
-import { Page, BrowserContext } from '@playwright/test';
+import type { Page, BrowserContext } from '@playwright/test';
 
 /**
  * Clear all browser state (cookies, storage, permissions)

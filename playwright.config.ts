@@ -39,7 +39,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL for navigation
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4321/',
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
