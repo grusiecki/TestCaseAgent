@@ -53,11 +53,19 @@ jobs:
 
       - name: Create .env.test file for E2E tests
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env.test
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env.test
           echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env.test
           echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env.test
           echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env.test
-          echo ".env.test file created with secrets"
+
+      - name: Verify .env.test file (debug)
+        run: |
+          echo "Checking if .env.test exists..."
+          ls -la .env.test || echo ".env.test not found!"
+          echo "Number of lines in .env.test:"
+          wc -l .env.test || echo "Cannot count lines"
+          echo "First few characters (masked):"
+          head -c 50 .env.test | sed 's/./*/g' || echo "Cannot read file"
 
       - name: Run E2E tests
         run: npm run test:e2e
