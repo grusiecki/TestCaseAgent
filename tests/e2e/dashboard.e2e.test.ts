@@ -4,10 +4,10 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { TEST_USERS } from '../fixtures/test-data';
-import { clearBrowserState } from './helpers/test-helpers';
+import { LoginPage } from './pages/LoginPage.js';
+import { DashboardPage } from './pages/DashboardPage.js';
+import { TEST_USERS } from '../fixtures/test-data.js';
+import { clearBrowserState } from './helpers/test-helpers.js';
 
 // Helper function to login before tests
 async function loginAsTestUser(loginPage: LoginPage) {

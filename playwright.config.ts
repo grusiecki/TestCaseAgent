@@ -79,6 +79,13 @@ export default defineConfig({
     url: 'http://localhost:4321',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    // Pass environment variables to the dev server
+    env: {
+      SUPABASE_URL: process.env.SUPABASE_URL || '',
+      SUPABASE_KEY: process.env.SUPABASE_KEY || '',
+      TEST_USER_EMAIL: process.env.TEST_USER_EMAIL || '',
+      TEST_USER_PASSWORD: process.env.TEST_USER_PASSWORD || '',
+    },
   },
   
   // Output folder for test artifacts
