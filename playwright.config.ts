@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
 
-// Load test environment variables
+// Load test environment variables from .env.test if it exists
+// In CI, these will be passed as environment variables directly
 dotenv.config({ path: '.env.test' });
 
 /**
@@ -80,7 +81,16 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     // Pass environment variables to the dev server
-    env: {
+    // These will be available from either .env.test or GitHub Actions environment
+    env: process.env.CI ? {
+      // In CI, explicitly pass all environment variables
+      SUPABASE_URL: process.env.SUPABASE_URL!,
+      SUPABASE_KEY: process.env.SUPABASE_KEY!,
+      TEST_USER_EMAIL: process.env.TEST_USER_EMAIL!,
+      TEST_USER_PASSWORD: process.env.TEST_USER_PASSWORD!,
+      NODE_ENV: 'test',
+    } : {
+      // Locally, use from .env.test
       SUPABASE_URL: process.env.SUPABASE_URL || '',
       SUPABASE_KEY: process.env.SUPABASE_KEY || '',
       TEST_USER_EMAIL: process.env.TEST_USER_EMAIL || '',
