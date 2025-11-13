@@ -3,16 +3,17 @@ import type { ProjectDTO } from "@/types";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Loader2, Download, Trash2, Calendar, FileText, Star } from "lucide-react";
+import { Loader2, Download, Trash2, Calendar, FileText, Star, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
   project: ProjectDTO;
   onExport: (projectId: string) => void;
   onDelete: (projectId: string) => Promise<void>;
+  onEdit: (projectId: string) => void;
 }
 
-export function ProjectCard({ project, onExport, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, onExport, onDelete, onEdit }: ProjectCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -37,6 +38,11 @@ export function ProjectCard({ project, onExport, onDelete }: ProjectCardProps) {
         setIsExporting(false);
       }
     }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(project.id);
   };
 
   const formattedDate = new Date(project.created_at).toLocaleDateString();
@@ -83,6 +89,15 @@ export function ProjectCard({ project, onExport, onDelete }: ProjectCardProps) {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEdit}
+            className="relative group/button"
+          >
+            <Edit className="h-4 w-4 transition-transform group-hover/button:scale-110" />
+            <span className="ml-2">Edit</span>
+          </Button>
           <Button
             variant="outline"
             size="sm"

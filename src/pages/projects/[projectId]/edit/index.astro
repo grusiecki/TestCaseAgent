@@ -1,0 +1,16 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { EditProjectView } from '@/components/edit-project/EditProjectView';
+
+const { projectId } = Astro.params;
+if (!projectId) {
+  return Astro.redirect('/404');
+}
+
+// Disable static generation for this route as it depends on dynamic data
+export const prerender = false;
+---
+
+<Layout title="Edit Test Cases">
+  <EditProjectView client:load projectId={projectId} />
+</Layout>

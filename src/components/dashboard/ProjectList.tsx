@@ -7,9 +7,10 @@ interface ProjectListProps {
   isLoading?: boolean;
   onExport: (projectId: string) => void;
   onDelete: (projectId: string) => Promise<void>;
+  onEdit: (projectId: string) => void;
 }
 
-export function ProjectList({ projects, isLoading = false, onExport, onDelete }: ProjectListProps) {
+export function ProjectList({ projects, isLoading = false, onExport, onDelete, onEdit }: ProjectListProps) {
   if (isLoading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -34,7 +35,7 @@ export function ProjectList({ projects, isLoading = false, onExport, onDelete }:
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => (
-        <ProjectCard key={project.id} project={project} onExport={onExport} onDelete={onDelete} />
+        <ProjectCard key={project.id} project={project} onExport={onExport} onDelete={onDelete} onEdit={onEdit} />
       ))}
     </div>
   );

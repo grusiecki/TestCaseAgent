@@ -13,10 +13,12 @@ const mockProject = {
 describe("ProjectCard", () => {
   const mockOnExport = vi.fn();
   const mockOnDelete = vi.fn();
+  const mockOnEdit = vi.fn();
 
   beforeEach(() => {
     mockOnExport.mockReset();
     mockOnDelete.mockReset();
+    mockOnEdit.mockReset();
   });
 
   // it("renders project details correctly", () => {
@@ -66,7 +68,7 @@ describe("ProjectCard", () => {
 
   it("handles export action", async () => {
     render(
-      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} />
+      <ProjectCard project={mockProject} onExport={mockOnExport} onDelete={mockOnDelete} onEdit={mockOnEdit} />
     );
 
     // Click export button

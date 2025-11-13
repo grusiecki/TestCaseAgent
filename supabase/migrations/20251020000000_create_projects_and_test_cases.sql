@@ -25,33 +25,38 @@ CREATE TABLE IF NOT EXISTS public.test_cases (
 );
 
 -- Create indexes
-CREATE INDEX idx_projects_user_id ON public.projects(user_id);
-CREATE INDEX idx_test_cases_project_id ON public.test_cases(project_id);
-CREATE INDEX idx_test_cases_order ON public.test_cases(project_id, order_index);
+CREATE INDEX IF NOT EXISTS idx_projects_user_id ON public.projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_test_cases_project_id ON public.test_cases(project_id);
+CREATE INDEX IF NOT EXISTS idx_test_cases_order ON public.test_cases(project_id, order_index);
 
 -- Add Row Level Security (RLS) policies
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.test_cases ENABLE ROW LEVEL SECURITY;
 
 -- Projects policies
+DROP POLICY IF EXISTS "Users can view their own projects" ON public.projects;
 CREATE POLICY "Users can view their own projects"
     ON public.projects FOR SELECT
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create their own projects" ON public.projects;
 CREATE POLICY "Users can create their own projects"
     ON public.projects FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own projects" ON public.projects;
 CREATE POLICY "Users can update their own projects"
     ON public.projects FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own projects" ON public.projects;
 CREATE POLICY "Users can delete their own projects"
     ON public.projects FOR DELETE
     USING (auth.uid() = user_id);
 
 -- Test cases policies
+DROP POLICY IF EXISTS "Users can view test cases of their projects" ON public.test_cases;
 CREATE POLICY "Users can view test cases of their projects"
     ON public.test_cases FOR SELECT
     USING (EXISTS (
@@ -60,6 +65,7 @@ CREATE POLICY "Users can view test cases of their projects"
         AND projects.user_id = auth.uid()
     ));
 
+DROP POLICY IF EXISTS "Users can create test cases in their projects" ON public.test_cases;
 CREATE POLICY "Users can create test cases in their projects"
     ON public.test_cases FOR INSERT
     WITH CHECK (EXISTS (
@@ -68,6 +74,7 @@ CREATE POLICY "Users can create test cases in their projects"
         AND projects.user_id = auth.uid()
     ));
 
+DROP POLICY IF EXISTS "Users can update test cases in their projects" ON public.test_cases;
 CREATE POLICY "Users can update test cases in their projects"
     ON public.test_cases FOR UPDATE
     USING (EXISTS (
@@ -76,6 +83,7 @@ CREATE POLICY "Users can update test cases in their projects"
         AND projects.user_id = auth.uid()
     ));
 
+DROP POLICY IF EXISTS "Users can delete test cases in their projects" ON public.test_cases;
 CREATE POLICY "Users can delete test cases in their projects"
     ON public.test_cases FOR DELETE
     USING (EXISTS (
@@ -94,11 +102,14 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at
+-- Note: Using BEFORE triggers to modify NEW row before it's written
+DROP TRIGGER IF EXISTS update_projects_updated_at ON public.projects;
 CREATE TRIGGER update_projects_updated_at
     BEFORE UPDATE ON public.projects
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_test_cases_updated_at ON public.test_cases;
 CREATE TRIGGER update_test_cases_updated_at
     BEFORE UPDATE ON public.test_cases
     FOR EACH ROW

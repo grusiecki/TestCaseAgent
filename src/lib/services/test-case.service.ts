@@ -176,4 +176,75 @@ export class TestCaseService {
 
     console.log('Test case soft deleted successfully');
   }
+
+  async bulkUpdateTestCases(
+    projectId: string, 
+    userId: string, 
+    testCases: UpdateTestCaseInput[]
+  ): Promise<TestCaseDTO[]> {
+    console.log('Bulk updating test cases for project:', projectId, 'count:', testCases.length);
+
+    // Use direct HTTP call to PostgREST instead of supabase.rpc()
+    // This bypasses Supabase client cache issues
+    
+    // Get auth session from supabase client
+    const { data: { session } } = await this.supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    
+    if (!accessToken) {
+      console.error('No active session for bulk update');
+      throw new Error('No active session - user must be authenticated');
+    }
+    
+    // Get Supabase URL and key from environment
+    const supabaseUrl = import.meta.env.SUPABASE_URL;
+    const supabaseKey = import.meta.env.SUPABASE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase configuration');
+      throw new Error('Missing Supabase configuration');
+    }
+    
+    const endpoint = `${supabaseUrl}/rest/v1/rpc/bulk_update_test_cases`;
+    console.log('Making direct PostgREST call to:', endpoint);
+    console.log('Payload:', { p_project_id: projectId, p_user_id: userId, test_cases_count: testCases.length });
+    
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          p_project_id: projectId,
+          p_user_id: userId,
+          p_test_cases: testCases
+        })
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to bulk update test cases. Status:', response.status, 'Body:', errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(`Failed to bulk update test cases: ${errorJson.message || errorText}`);
+        } catch (parseError) {
+          throw new Error(`Failed to bulk update test cases (${response.status}): ${errorText}`);
+        }
+      }
+
+      const result = await response.json();
+      
+      console.log('Bulk update completed successfully:', result.length, 'test cases updated');
+      return result as TestCaseDTO[];
+    } catch (error) {
+      console.error('Bulk update exception:', error);
+      throw error;
+    }
+  }
 }

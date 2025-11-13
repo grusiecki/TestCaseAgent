@@ -12,7 +12,7 @@ export function DashboardView() {
   useAuthGuard();
   const [
     { projects, stats, isLoading, error, page, limit, total },
-    { fetchProjects, deleteProject, exportProject, setPage },
+    { fetchProjects, deleteProject, exportProject, editProject, setPage },
   ] = useDashboard();
 
   if (error) {
@@ -66,6 +66,7 @@ export function DashboardView() {
             isLoading={isLoading}
             onExport={exportProject}
             onDelete={deleteProject}
+            onEdit={editProject}
           />
         </div>
 

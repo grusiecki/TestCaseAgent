@@ -18,6 +18,7 @@ interface DashboardActions {
   fetchProjects: () => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   exportProject: (projectId: string) => void;
+  editProject: (projectId: string) => void;
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
 }
@@ -122,6 +123,11 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     window.location.href = `/projects/${projectId}/export`;
   }, []);
 
+  const editProject = useCallback((projectId: string) => {
+    // Navigate to edit view
+    window.location.href = `/projects/${projectId}/edit`;
+  }, []);
+
   const setPage = useCallback((page: number) => {
     if (page < 1) {
       setState((prev) => ({
@@ -154,6 +160,7 @@ export function useDashboard(): [DashboardState, DashboardActions] {
       fetchProjects,
       deleteProject,
       exportProject,
+      editProject,
       setPage,
       setLimit,
     },
